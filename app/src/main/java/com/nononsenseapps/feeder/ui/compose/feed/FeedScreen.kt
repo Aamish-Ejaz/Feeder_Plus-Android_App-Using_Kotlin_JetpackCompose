@@ -116,6 +116,7 @@ import com.nononsenseapps.feeder.db.room.ID_SAVED_ARTICLES
 import com.nononsenseapps.feeder.db.room.ID_UNSET
 import com.nononsenseapps.feeder.model.LocaleOverride
 import com.nononsenseapps.feeder.model.export.exportSavedArticles
+import com.nononsenseapps.feeder.model.export.importSavedArticles
 import com.nononsenseapps.feeder.model.opml.exportOpml
 import com.nononsenseapps.feeder.model.opml.importOpml
 import com.nononsenseapps.feeder.ui.compose.components.safeSemantics
@@ -178,12 +179,23 @@ fun FeedScreen(
     val di = LocalDI.current
     val savedArticleExporter =
         rememberLauncherForActivityResult(
-            ActivityResultContracts.CreateDocument("text/x-opml"),
+            ActivityResultContracts.CreateDocument("text/plain"),
         ) { uri ->
             if (uri != null) {
                 val applicationCoroutineScope: ApplicationCoroutineScope by di.instance()
                 applicationCoroutineScope.launch {
                     exportSavedArticles(di, uri)
+                }
+            }
+        }
+    val savedArticleImporter =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.OpenDocument(),
+        ) { uri ->
+            if (uri != null) {
+                val applicationCoroutineScope: ApplicationCoroutineScope by di.instance()
+                applicationCoroutineScope.launch {
+                    importSavedArticles(di, uri)
                 }
             }
         }
@@ -363,6 +375,17 @@ fun FeedScreen(
                     }
                 }
             },
+            onImportSavedArticles = {
+                try {
+                    savedArticleImporter.launch(
+                        arrayOf("text/plain", "application/octet-stream", "*/*"),
+                    )
+                } catch (_: Exception) {
+                    coroutineScope.launch {
+                        toastMaker.makeToast("Failed to import saved articles")
+                    }
+                }
+            },
             drawerState = drawerState,
             markAsUnread = { itemId, unread ->
                 if (unread) {
@@ -484,6 +507,7 @@ fun FeedScreen(
     onImport: () -> Unit,
     onExportOPML: () -> Unit,
     onExportSavedArticles: () -> Unit,
+    onImportSavedArticles: () -> Unit,
     drawerState: DrawerState,
     markAsUnread: (Long, Boolean) -> Unit,
     markAsReadOnSwipe: (id: Long, unread: Boolean, saved: Boolean) -> Unit,
@@ -871,6 +895,21 @@ fun FeedScreen(
                                 },
                                 text = {
                                     Text(stringResource(id = R.string.export_feeds_to_opml))
+                                },
+                            )
+                            DropdownMenuItem(
+                                onClick = {
+                                    onShowToolbarMenu(false)
+                                    onImportSavedArticles()
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.ImportExport,
+                                        contentDescription = null,
+                                    )
+                                },
+                                text = {
+                                    Text("Import saved articles")
                                 },
                             )
                             DropdownMenuItem(

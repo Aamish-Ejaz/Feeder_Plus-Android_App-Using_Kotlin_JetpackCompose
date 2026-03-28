@@ -80,7 +80,6 @@ suspend fun writeOutputStream(
 }
 
 /**
-
  * @param s string to escape
  * *
  * @return String with xml stuff escaped
@@ -92,9 +91,8 @@ internal fun escape(s: String): String =
         .replace("'", "&apos;")
         .replace("<", "&lt;")
         .replace(">", "&gt;")
-
+        .replace("\n", "&#10;")
 /**
-
  * @param s string to unescape
  * *
  * @return String with xml stuff unescaped
@@ -105,6 +103,8 @@ internal fun unescape(s: String): String =
         .replace("&apos;", "'")
         .replace("&lt;", "<")
         .replace("&gt;", ">")
+        .replace("&#10;", "\n")
+        .replace("&#13;", "")
         .replace("&amp;", "&")
 
 // OPML DSL
@@ -241,6 +241,9 @@ abstract class BodyTag(
             fullTextByDefault = feed.fullTextByDefault
             openArticlesWith = feed.openArticlesWith
             alternateId = feed.alternateId
+            // Ensure we join by newline and escape for XML
+            localBlockList = escape(feed.localBlockList.split('\n').filter { it.isNotBlank() }.joinToString("\n"))
+            localAllowList = escape(feed.localAllowList.split('\n').filter { it.isNotBlank() }.joinToString("\n"))
         }
 }
 
@@ -295,6 +298,16 @@ class Outline : BodyTag("outline") {
         get() = attributes["feeder:alternateId"]!!.toBoolean()
         set(value) {
             attributes["feeder:alternateId"] = value.toString()
+        }
+    var localBlockList: String
+        get() = attributes["feeder:localBlockList"] ?: ""
+        set(value) {
+            attributes["feeder:localBlockList"] = value
+        }
+    var localAllowList: String
+        get() = attributes["feeder:localAllowList"] ?: ""
+        set(value) {
+            attributes["feeder:localAllowList"] = value
         }
 }
 

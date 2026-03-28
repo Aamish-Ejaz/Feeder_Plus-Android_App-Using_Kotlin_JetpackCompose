@@ -47,6 +47,7 @@
   <string name="sync">Sync</string>
   <string name="export_feeds_to_opml">Export feeds to OPML</string>
   <string name="import_feeds_from_opml">Import feeds from OPML</string>
+  <string name="import_saved_articles">Import saved articles</string>
   <string name="export_saved_articles">Export saved articles</string>
   <string name="view_debug_log">View debug log</string>
   <string name="new_based_on_this">New based on this</string>
@@ -301,7 +302,7 @@
   <string name="text_preview">Text preview</string>
     <string name="system_default">System default</string>
   <string name="weight">Weight</string>
-  <string name="italic">Italic</string>
+  <string name="italic">italic</string>
   <string name="add_font">Add font…</string>
   <string name="bold">Bold</string>
   <string name="text_settings">Text settings</string>

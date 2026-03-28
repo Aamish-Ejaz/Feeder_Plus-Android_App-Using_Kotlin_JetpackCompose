@@ -556,6 +556,12 @@ interface FeedItemDao {
     @Query("SELECT id FROM feed_items")
     suspend fun getAllFeedItemIds(): List<Long>
 
+    @Query("SELECT * FROM feed_items WHERE link = :link LIMIT 1")
+    suspend fun loadFeedItemByLink(link: String): FeedItem?
+
+    @Query("UPDATE feed_items SET bookmarked = 1 WHERE link = :link")
+    suspend fun bookmarkByLink(link: String): Int
+
     companion object {
         // These are backed by a database index
         const val FEED_ITEM_LIST_SORT_ORDER_DESC =
