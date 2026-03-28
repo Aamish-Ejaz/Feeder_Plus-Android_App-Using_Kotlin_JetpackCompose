@@ -248,6 +248,8 @@ class Repository(
 
     fun setFeedItemStyle(value: FeedItemStyle) = settingsStore.setFeedItemStyle(value)
 
+    val swipe_as_read: StateFlow<SwipeAsRead> = settingsStore.swipeAsRead
+
     val swipeAsRead: StateFlow<SwipeAsRead> = settingsStore.swipeAsRead
 
     fun setSwipeAsRead(value: SwipeAsRead) = settingsStore.setSwipeAsRead(value)
@@ -857,6 +859,16 @@ class Repository(
         retryAfter: Instant,
     ) {
         feedStore.setRetryAfterForFeedsWithBaseUrl(host = host, retryAfter = retryAfter)
+    }
+
+    suspend fun updateLocalBlockList(feedId: Long, blockList: String) {
+        feedStore.updateLocalBlockList(feedId, blockList)
+        runOnceBlocklistUpdate(di)
+    }
+
+    suspend fun updateLocalAllowList(feedId: Long, allowList: String) {
+        feedStore.updateLocalAllowList(feedId, allowList)
+        runOnceBlocklistUpdate(di)
     }
 
     companion object {

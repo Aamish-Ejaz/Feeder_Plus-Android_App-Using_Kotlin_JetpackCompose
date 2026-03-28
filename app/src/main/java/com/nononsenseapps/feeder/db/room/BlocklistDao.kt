@@ -45,9 +45,25 @@ interface BlocklistDao {
 
     @Query(
         """
+            with recursive split(feed_id, pattern, rest, is_allow) as (
+                select id, '', local_block_list || char(10), 0 from feeds where local_block_list != ''
+                union all
+                select id, '', local_allow_list || char(10), 1 from feeds where local_allow_list != ''
+                union all
+                select feed_id, lower(substr(rest, 1, instr(rest, char(10)) - 1)), substr(rest, instr(rest, char(10)) + 1), is_allow
+                from split where rest != ''
+            )
             update feed_items
             set block_time = case
-                when exists(select 1 from blocklist where lower(feed_items.plain_title) glob blocklist.glob_pattern)
+                when
+                    exists(select 1 from blocklist where lower(feed_items.plain_title) glob blocklist.glob_pattern)
+                    OR
+                    exists(select 1 from split where split.feed_id = feed_items.feed_id and split.is_allow = 0 and split.pattern != '' and lower(feed_items.plain_title) glob '*' || split.pattern || '*')
+                    OR
+                    (
+                        exists(select 1 from feeds where id = feed_items.feed_id and local_allow_list != '')
+                        AND NOT exists(select 1 from split where split.feed_id = feed_items.feed_id and split.is_allow = 1 and split.pattern != '' and lower(feed_items.plain_title) glob '*' || split.pattern || '*')
+                    )
                 then coalesce(block_time, :blockTime)
                 else null
                 end
@@ -57,9 +73,25 @@ interface BlocklistDao {
 
     @Query(
         """
+            with recursive split(feed_id, pattern, rest, is_allow) as (
+                select id, '', local_block_list || char(10), 0 from feeds where local_block_list != ''
+                union all
+                select id, '', local_allow_list || char(10), 1 from feeds where local_allow_list != ''
+                union all
+                select feed_id, lower(substr(rest, 1, instr(rest, char(10)) - 1)), substr(rest, instr(rest, char(10)) + 1), is_allow
+                from split where rest != ''
+            )
             update feed_items
             set block_time = case
-                when exists(select 1 from blocklist where lower(feed_items.plain_title) glob blocklist.glob_pattern or lower(feed_items.plain_snippet) glob blocklist.glob_pattern)
+                when
+                    exists(select 1 from blocklist where lower(feed_items.plain_title) glob blocklist.glob_pattern or lower(feed_items.plain_snippet) glob blocklist.glob_pattern)
+                    OR
+                    exists(select 1 from split where split.feed_id = feed_items.feed_id and split.is_allow = 0 and split.pattern != '' and (lower(feed_items.plain_title) glob '*' || split.pattern || '*' or lower(feed_items.plain_snippet) glob '*' || split.pattern || '*'))
+                    OR
+                    (
+                        exists(select 1 from feeds where id = feed_items.feed_id and local_allow_list != '')
+                        AND NOT exists(select 1 from split where split.feed_id = feed_items.feed_id and split.is_allow = 1 and split.pattern != '' and (lower(feed_items.plain_title) glob '*' || split.pattern || '*' or lower(feed_items.plain_snippet) glob '*' || split.pattern || '*'))
+                    )
                 then coalesce(block_time, :blockTime)
                 else null
                 end
@@ -80,9 +112,25 @@ interface BlocklistDao {
 
     @Query(
         """
+            with recursive split(feed_id, pattern, rest, is_allow) as (
+                select id, '', local_block_list || char(10), 0 from feeds where local_block_list != ''
+                union all
+                select id, '', local_allow_list || char(10), 1 from feeds where local_allow_list != ''
+                union all
+                select feed_id, lower(substr(rest, 1, instr(rest, char(10)) - 1)), substr(rest, instr(rest, char(10)) + 1), is_allow
+                from split where rest != ''
+            )
             update feed_items
             set block_time = case
-                when exists(select 1 from blocklist where lower(feed_items.plain_title) glob blocklist.glob_pattern)
+                when
+                    exists(select 1 from blocklist where lower(feed_items.plain_title) glob blocklist.glob_pattern)
+                    OR
+                    exists(select 1 from split where split.feed_id = feed_items.feed_id and split.is_allow = 0 and split.pattern != '' and lower(feed_items.plain_title) glob '*' || split.pattern || '*')
+                    OR
+                    (
+                        exists(select 1 from feeds where id = feed_items.feed_id and local_allow_list != '')
+                        AND NOT exists(select 1 from split where split.feed_id = feed_items.feed_id and split.is_allow = 1 and split.pattern != '' and lower(feed_items.plain_title) glob '*' || split.pattern || '*')
+                    )
                 then :blockTime
                 else null
                 end
@@ -93,9 +141,25 @@ interface BlocklistDao {
 
     @Query(
         """
+            with recursive split(feed_id, pattern, rest, is_allow) as (
+                select id, '', local_block_list || char(10), 0 from feeds where local_block_list != ''
+                union all
+                select id, '', local_allow_list || char(10), 1 from feeds where local_allow_list != ''
+                union all
+                select feed_id, lower(substr(rest, 1, instr(rest, char(10)) - 1)), substr(rest, instr(rest, char(10)) + 1), is_allow
+                from split where rest != ''
+            )
             update feed_items
             set block_time = case
-                when exists(select 1 from blocklist where lower(feed_items.plain_title) glob blocklist.glob_pattern or lower(feed_items.plain_snippet) glob blocklist.glob_pattern)
+                when
+                    exists(select 1 from blocklist where lower(feed_items.plain_title) glob blocklist.glob_pattern or lower(feed_items.plain_snippet) glob blocklist.glob_pattern)
+                    OR
+                    exists(select 1 from split where split.feed_id = feed_items.feed_id and split.is_allow = 0 and split.pattern != '' and (lower(feed_items.plain_title) glob '*' || split.pattern || '*' or lower(feed_items.plain_snippet) glob '*' || split.pattern || '*'))
+                    OR
+                    (
+                        exists(select 1 from feeds where id = feed_items.feed_id and local_allow_list != '')
+                        AND NOT exists(select 1 from split where split.feed_id = feed_items.feed_id and split.is_allow = 1 and split.pattern != '' and (lower(feed_items.plain_title) glob '*' || split.pattern || '*' or lower(feed_items.plain_snippet) glob '*' || split.pattern || '*'))
+                    )
                 then :blockTime
                 else null
                 end
@@ -118,13 +182,29 @@ interface BlocklistDao {
 
     @Query(
         """
+            with recursive split(feed_id, pattern, rest, is_allow) as (
+                select id, '', local_block_list || char(10), 0 from feeds where id = :feedId
+                union all
+                select id, '', local_allow_list || char(10), 1 from feeds where id = :feedId
+                union all
+                select feed_id, lower(substr(rest, 1, instr(rest, char(10)) - 1)), substr(rest, instr(rest, char(10)) + 1), is_allow
+                from split where rest != ''
+            )
             update feed_items
             set block_time = case
-                when exists(select 1 from blocklist where lower(feed_items.plain_title) glob blocklist.glob_pattern)
-                then :blockTime
+                when
+                    exists(select 1 from blocklist where lower(feed_items.plain_title) glob blocklist.glob_pattern)
+                    OR
+                    exists(select 1 from split where split.is_allow = 0 and split.pattern != '' and lower(feed_items.plain_title) glob '*' || split.pattern || '*')
+                    OR
+                    (
+                        exists(select 1 from feeds where id = :feedId and local_allow_list != '')
+                        AND NOT exists(select 1 from split where split.is_allow = 1 and split.pattern != '' and lower(feed_items.plain_title) glob '*' || split.pattern || '*')
+                    )
+                then coalesce(block_time, :blockTime)
                 else null
                 end
-            where feed_id = :feedId and block_time is null
+            where feed_id = :feedId
         """,
     )
     suspend fun setItemBlockStatusForNewInFeedTitleOnly(
@@ -134,13 +214,29 @@ interface BlocklistDao {
 
     @Query(
         """
+            with recursive split(feed_id, pattern, rest, is_allow) as (
+                select id, '', local_block_list || char(10), 0 from feeds where id = :feedId
+                union all
+                select id, '', local_allow_list || char(10), 1 from feeds where id = :feedId
+                union all
+                select feed_id, lower(substr(rest, 1, instr(rest, char(10)) - 1)), substr(rest, instr(rest, char(10)) + 1), is_allow
+                from split where rest != ''
+            )
             update feed_items
             set block_time = case
-                when exists(select 1 from blocklist where lower(feed_items.plain_title) glob blocklist.glob_pattern or lower(feed_items.plain_snippet) glob blocklist.glob_pattern)
-                then :blockTime
+                when
+                    exists(select 1 from blocklist where lower(feed_items.plain_title) glob blocklist.glob_pattern or lower(feed_items.plain_snippet) glob blocklist.glob_pattern)
+                    OR
+                    exists(select 1 from split where split.is_allow = 0 and split.pattern != '' and (lower(feed_items.plain_title) glob '*' || split.pattern || '*' or lower(feed_items.plain_snippet) glob '*' || split.pattern || '*'))
+                    OR
+                    (
+                        exists(select 1 from feeds where id = :feedId and local_allow_list != '')
+                        AND NOT exists(select 1 from split where split.is_allow = 1 and split.pattern != '' and (lower(feed_items.plain_title) glob '*' || split.pattern || '*' or lower(feed_items.plain_snippet) glob '*' || split.pattern || '*'))
+                    )
+                then coalesce(block_time, :blockTime)
                 else null
                 end
-            where feed_id = :feedId and block_time is null
+            where feed_id = :feedId
         """,
     )
     suspend fun setItemBlockStatusForNewInFeedWithSummaries(

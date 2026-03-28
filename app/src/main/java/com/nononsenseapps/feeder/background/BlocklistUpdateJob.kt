@@ -6,9 +6,9 @@ import android.app.job.JobParameters
 import android.app.job.JobScheduler
 import android.content.ComponentName
 import android.content.Context
+import android.os.PersistableBundle
 import android.util.Log
 import androidx.core.content.getSystemService
-import com.nononsenseapps.feeder.archmodel.Repository
 import com.nononsenseapps.feeder.archmodel.SettingsStore
 import com.nononsenseapps.feeder.db.room.BlocklistDao
 import com.nononsenseapps.feeder.db.room.ID_UNSET
@@ -54,8 +54,7 @@ class BlocklistUpdateJob(
     }
 }
 
-fun runOnceBlocklistUpdate(di: DI) {
-    val repository: Repository by di.instance()
+fun runOnceBlocklistUpdate(di: DI, feedId: Long = ID_UNSET, onlyNew: Boolean = false) {
     val context: Application by di.instance()
     val jobScheduler: JobScheduler? = context.getSystemService()
 
@@ -64,11 +63,17 @@ fun runOnceBlocklistUpdate(di: DI) {
         return
     }
 
+    val extras = PersistableBundle().apply {
+        putLong(ARG_FEED_ID, feedId)
+        putBoolean(ARG_ONLY_NEW, onlyNew)
+    }
+
     val componentName = ComponentName(context, FeederJobService::class.java)
     val jobInfo =
         JobInfo
             .Builder(BackgroundJobId.BLOCKLIST_UPDATE.jobId, componentName)
             .setRequiredNetworkType(JobInfo.NETWORK_TYPE_NONE)
+            .setExtras(extras)
             // Older versions of Android enforce a constraint to be present. Hence the small delay
             .setMinimumLatency(1)
             .build()

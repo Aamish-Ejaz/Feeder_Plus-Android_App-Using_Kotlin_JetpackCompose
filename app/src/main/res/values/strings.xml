@@ -311,4 +311,12 @@
 
   <string name="widget_title">Feeder</string>
   <string name="widget_refreshing">Refreshing</string>
+
+  <string name="per_feed_filtering">Per-Feed Filtering</string>
+  <string name="local_block_list">Local block list</string>
+  <string name="local_white_list">White list</string>
+  <string name="enter_words_to_hide">Enter words to hide</string>
+  <string name="enter_words_to_exclusively_show">Enter words to exclusively show</string>
+  <string name="update">Update</string>
+  <string name="select_a_feed">Select a feed</string>
 </resources>

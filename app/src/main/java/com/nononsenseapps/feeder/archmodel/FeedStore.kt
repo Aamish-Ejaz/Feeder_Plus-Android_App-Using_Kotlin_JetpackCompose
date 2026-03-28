@@ -157,4 +157,12 @@ class FeedStore(
     ) {
         feedDao.setRetryAfterForFeedsWithBaseUrl(host = host, retryAfter = retryAfter)
     }
+
+    suspend fun updateLocalBlockList(feedId: Long, blockList: String) {
+        feedDao.updateLocalBlockList(feedId, blockList)
+    }
+
+    suspend fun updateLocalAllowList(feedId: Long, allowList: String) {
+        feedDao.updateLocalAllowList(feedId, allowList)
+    }
 }

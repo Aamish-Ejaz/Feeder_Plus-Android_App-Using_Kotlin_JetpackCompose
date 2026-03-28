@@ -212,6 +212,8 @@ class SettingsViewModel(
     val viewState: StateFlow<SettingsViewState>
         get() = _viewState.asStateFlow()
 
+    private val perFeedFilteringState = MutableStateFlow(PerFeedFilteringState())
+
     init {
         viewModelScope.launch {
             combine(
@@ -248,6 +250,7 @@ class SettingsViewModel(
                 repository.font,
                 repository.isPagingMode,
                 repository.isAnimatedPaging,
+                perFeedFilteringState,
             ) { params: Array<Any> ->
                 @Suppress("UNCHECKED_CAST")
                 SettingsViewState(
@@ -287,6 +290,7 @@ class SettingsViewModel(
                     font = params[30] as FontSelection,
                     isPagingMode = params[31] as Boolean,
                     isAnimatedPaging = params[32] as Boolean,
+                    perFeedFilteringState = params[33] as PerFeedFilteringState,
                 )
             }.collect {
                 _viewState.value = it
@@ -307,6 +311,37 @@ class SettingsViewModel(
                         OpenAIApi.ModelsResult.AzureDeploymentIdRequired -> OpenAIModelsState.None
                     }
                 }
+        }
+    }
+
+    fun onPerFeedFilteringEvent(event: PerFeedFilteringEvent) {
+        when (event) {
+            is PerFeedFilteringEvent.SelectFeed -> {
+                viewModelScope.launch {
+                    val feed = repository.getFeed(event.feedId)
+                    perFeedFilteringState.value = perFeedFilteringState.value.copy(
+                        selectedFeedId = event.feedId,
+                        localBlockList = feed?.localBlockList ?: "",
+                        localAllowList = feed?.localAllowList ?: ""
+                    )
+                }
+            }
+            is PerFeedFilteringEvent.UpdateLocalBlockList -> {
+                perFeedFilteringState.value = perFeedFilteringState.value.copy(localBlockList = event.value)
+            }
+            is PerFeedFilteringEvent.UpdateLocalAllowList -> {
+                perFeedFilteringState.value = perFeedFilteringState.value.copy(localAllowList = event.value)
+            }
+            PerFeedFilteringEvent.Save -> {
+                val state = perFeedFilteringState.value
+                val feedId = state.selectedFeedId
+                if (feedId != null) {
+                    viewModelScope.launch {
+                        repository.updateLocalBlockList(feedId, state.localBlockList)
+                        repository.updateLocalAllowList(feedId, state.localAllowList)
+                    }
+                }
+            }
         }
     }
 
@@ -350,7 +385,21 @@ data class SettingsViewState(
     val font: FontSelection = SystemDefault,
     val isPagingMode: Boolean = false,
     val isAnimatedPaging: Boolean = false,
+    val perFeedFilteringState: PerFeedFilteringState = PerFeedFilteringState(),
 )
+
+data class PerFeedFilteringState(
+    val selectedFeedId: Long? = null,
+    val localBlockList: String = "",
+    val localAllowList: String = "",
+)
+
+sealed interface PerFeedFilteringEvent {
+    data class SelectFeed(val feedId: Long) : PerFeedFilteringEvent
+    data class UpdateLocalBlockList(val value: String) : PerFeedFilteringEvent
+    data class UpdateLocalAllowList(val value: String) : PerFeedFilteringEvent
+    data object Save : PerFeedFilteringEvent
+}
 
 data class UIFeedSettings(
     val feedId: Long,

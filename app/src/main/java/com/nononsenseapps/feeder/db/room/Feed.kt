@@ -28,6 +28,8 @@ import java.net.URL
 import java.time.Instant
 
 const val OPEN_ARTICLE_WITH_APPLICATION_DEFAULT = ""
+const val COL_LOCAL_BLOCK_LIST = "local_block_list"
+const val COL_LOCAL_ALLOW_LIST = "local_allow_list"
 
 @Entity(
     tableName = FEEDS_TABLE_NAME,
@@ -61,6 +63,8 @@ data class Feed
         // Time when feed is allowed to be synced again earliest, based on retry-after response header
         @ColumnInfo(name = COL_RETRY_AFTER) var retryAfter: Instant = Instant.EPOCH,
         @ColumnInfo(name = COL_SUMMARIZE_ON_OPEN) var summarizeOnOpen: Boolean = false,
+        @ColumnInfo(name = "local_block_list") var localBlockList: String = "",
+        @ColumnInfo(name = "local_allow_list") var localAllowList: String = "",
     ) {
         constructor() : this(id = ID_UNSET)
 
