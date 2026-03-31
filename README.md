@@ -21,6 +21,24 @@ Feeder does NOT sync with usual remote backends so no account registration of an
 
 Feeder is free to use and runs locally on your device. Your data is 100% private.
 
+---
+
+### 🚀 New Features & Improvements (Added by Me)
+
+I have modified this version of Feeder to include advanced filtering and better data management:
+
+* **Granular Per-Feed Filtering:** * **Per-Feed Blocklist:** Unlike the original global blocklist, you can now set specific keywords for individual feeds. Blocked keywords in one feed will not affect search results in others.
+    * **Per-Feed Whitelist:** Added a new option to whitelist specific keywords per feed.
+    * **Accessibility:** These options are conveniently available within the **Edit Feed** menu.
+* **Enhanced OPML Backup:**
+    * Individual Blocklists and Whitelists are now included in **OPML Export**.
+    * On reinstallation, **Importing** the OPML file automatically restores all your custom per-feed filters.
+* **Saved Articles Management:**
+    * Fixed issues with the existing **Export Saved Articles** feature.
+    * Added a brand new **Import Saved Articles** feature, allowing users to restore their bookmarked content easily.
+
+---
+
 ### License
 
 **THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND**
@@ -35,7 +53,7 @@ If you want to translate Feeder into your native language the easiest way is to 
 
 Clone the project:
 
-    git clone --recursive https://github.com/spacecowboy/Feeder.git
+    git clone --recursive https://github.com/Aamish-Ejaz/Feeder_Plus-Android_App-Using_Kotlin_JetpackCompose.git
 
 Then build and install the app to your phone which is connected via USB:
 
@@ -50,16 +68,9 @@ Then build and install the app to your phone which is connected via USB:
 
 ### Screenshots
 
-<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1_en-US_phone_portrait_light_list.png" width=50%/><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2_en-US_phone_portrait_dark_list.png" width=50%/>
-<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3_en-US_phone_portrait_light_article.png" width=50%/><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4_en-US_phone_portrait_dark_article.png" width=50%/>
-<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5_en-US_phone_portrait_light_settings.png" width=50%/><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/6_en-US_phone_portrait_dark_settings.png" width=50%/>
+<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1_en-US_phone_portrait_light_list.png" width=45%/><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2_en-US_phone_portrait_dark_list.png" width=45%/>
+<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3_en-US_phone_portrait_light_article.png" width=45%/><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4_en-US_phone_portrait_dark_article.png" width=45%/>
+<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5_en-US_phone_portrait_light_settings.png" width=45%/><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/6_en-US_phone_portrait_dark_settings.png" width=45%/>
 
-### Download
-
-Feeder is available on [F-Droid](https://f-droid.org/en/packages/com.nononsenseapps.feeder/) and [Google Play](https://play.google.com/store/apps/details?id=com.nononsenseapps.feeder.play) and there are APKs available for download on [GitHub Releases](https://github.com/spacecowboy/Feeder/releases).
-
-The GitHub releases are signed with a key matching this signature:
-
-```
-SHA-256: C5:EE:FF:22:48:81:35:FF:C2:58:3C:3A:43:B0:53:A1:61:CA:86:98:62:96:1A:B8:53:4F:44:C7:5F:D5:7D:97
-```
+### Credits
+Original project by [spacecowboy](https://github.com/spacecowboy/Feeder). Modifications by [Aamish-Ejaz](https://github.com/Aamish-Ejaz/Feeder_Plus-Android_App-Using_Kotlin_JetpackCompose.git).
