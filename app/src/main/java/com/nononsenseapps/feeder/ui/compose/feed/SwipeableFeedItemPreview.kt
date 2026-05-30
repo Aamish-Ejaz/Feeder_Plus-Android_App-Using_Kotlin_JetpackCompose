@@ -80,8 +80,9 @@ fun SwipeableFeedItemPreview(
     maxLines: Int,
     showOnlyTitle: Boolean,
     showReadingTime: Boolean,
-    onMarkAboveAsRead: () -> Unit,
-    onMarkBelowAsRead: () -> Unit,
+//    onMarkAboveAsRead: () -> Unit,
+//    onMarkBelowAsRead: () -> Unit,
+    onMarkAsRead: () -> Unit,
     onToggleBookmark: () -> Unit,
     onShareItem: () -> Unit,
     onItemClick: () -> Unit,
@@ -144,8 +145,9 @@ fun SwipeableFeedItemPreview(
     val openFeedItemInBrowserLabel = stringResource(R.string.open_article_in_default_browser)
     val saveArticleLabel = stringResource(R.string.save_article)
     val unSaveArticleLabel = stringResource(R.string.unsave_article)
-    val markAboveAsReadLabel = stringResource(R.string.mark_items_above_as_read)
-    val markBelowAsReadLabel = stringResource(R.string.mark_items_below_as_read)
+//    val markAboveAsReadLabel = stringResource(R.string.mark_items_above_as_read)
+//    val markBelowAsReadLabel = stringResource(R.string.mark_items_below_as_read)
+    val markAsReadLabel = stringResource(R.string.mark_as_read)
     val shareLabel = stringResource(R.string.share)
 
     val unreadLabel = stringResource(R.string.unread_adjective)
@@ -208,12 +210,16 @@ fun SwipeableFeedItemPreview(
                                 onToggleBookmark()
                                 true
                             },
-                            CustomAccessibilityAction(markAboveAsReadLabel) {
-                                onMarkAboveAsRead()
-                                true
-                            },
-                            CustomAccessibilityAction(markBelowAsReadLabel) {
-                                onMarkBelowAsRead()
+//                            CustomAccessibilityAction(markAboveAsReadLabel) {
+//                                onMarkAboveAsRead()
+//                                true
+//                            },
+//                            CustomAccessibilityAction(markBelowAsReadLabel) {
+//                                onMarkBelowAsRead()
+//                                true
+//                            },
+                            CustomAccessibilityAction(markAsReadLabel) {
+                                onMarkAsRead()
                                 true
                             },
                             CustomAccessibilityAction(shareLabel) {
@@ -282,8 +288,9 @@ fun SwipeableFeedItemPreview(
                     onOpenFeedItemInReader = onOpenFeedItemInReader,
                     onOpenFeedItemInCustomTab = onOpenFeedItemInCustomTab,
                     onOpenFeedItemInBrowser = onOpenFeedItemInBrowser,
-                    onMarkAboveAsRead = onMarkAboveAsRead,
-                    onMarkBelowAsRead = onMarkBelowAsRead,
+//                    onMarkAboveAsRead = onMarkAboveAsRead,
+//                    onMarkBelowAsRead = onMarkBelowAsRead,
+                    onMarkAsRead = onMarkAsRead,
                     onShareItem = onShareItem,
                     onToggleBookmark = onToggleBookmark,
                     dropDownMenuExpanded = dropDownMenuExpanded,
@@ -330,8 +337,9 @@ fun SwipeableFeedItemPreview(
                             FeedItemEvent.OpenInReader -> onOpenFeedItemInReader()
                             FeedItemEvent.OpenInCustomTab -> onOpenFeedItemInCustomTab()
                             FeedItemEvent.OpenInBrowser -> onOpenFeedItemInBrowser()
-                            FeedItemEvent.MarkAboveAsRead -> onMarkAboveAsRead()
-                            FeedItemEvent.MarkBelowAsRead -> onMarkBelowAsRead()
+//                            FeedItemEvent.MarkAboveAsRead -> onMarkAboveAsRead()
+//                            FeedItemEvent.MarkBelowAsRead -> onMarkBelowAsRead()
+                            FeedItemEvent.MarkAsRead -> onMarkAsRead()
                             FeedItemEvent.ShareItem -> onShareItem()
                             FeedItemEvent.ToggleBookmarked -> onToggleBookmark()
                         }
@@ -346,8 +354,9 @@ fun SwipeableFeedItemPreview(
                     onOpenFeedItemInReader = onOpenFeedItemInReader,
                     onOpenFeedItemInCustomTab = onOpenFeedItemInCustomTab,
                     onOpenFeedItemInBrowser = onOpenFeedItemInBrowser,
-                    onMarkAboveAsRead = onMarkAboveAsRead,
-                    onMarkBelowAsRead = onMarkBelowAsRead,
+//                    onMarkAboveAsRead = onMarkAboveAsRead,
+//                    onMarkBelowAsRead = onMarkBelowAsRead,
+                    onMarkAsRead = onMarkAsRead,
                     onShareItem = onShareItem,
                     onToggleBookmark = onToggleBookmark,
                     dropDownMenuExpanded = dropDownMenuExpanded,
@@ -378,8 +387,9 @@ fun SwipeableFeedItemPreview(
                     onOpenFeedItemInReader = onOpenFeedItemInReader,
                     onOpenFeedItemInCustomTab = onOpenFeedItemInCustomTab,
                     onOpenFeedItemInBrowser = onOpenFeedItemInBrowser,
-                    onMarkAboveAsRead = onMarkAboveAsRead,
-                    onMarkBelowAsRead = onMarkBelowAsRead,
+//                    onMarkAboveAsRead = onMarkAboveAsRead,
+//                    onMarkBelowAsRead = onMarkBelowAsRead,
+                    onMarkAsRead = onMarkAsRead,
                     onShareItem = onShareItem,
                     onToggleBookmark = onToggleBookmark,
                     dropDownMenuExpanded = dropDownMenuExpanded,
