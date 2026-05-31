@@ -38,41 +38,34 @@ const val OPEN_ARTICLE_WITH_APPLICATION_DEFAULT = ""
     ],
 )
 data class Feed
-@Ignore
-constructor(
-    @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name = COL_ID)
-    var id: Long = ID_UNSET,
-    @ColumnInfo(name = COL_TITLE) var title: String = "",
-    @ColumnInfo(name = COL_CUSTOM_TITLE) var customTitle: String = "",
-    @ColumnInfo(name = COL_URL) var url: URL = URL("http://"),
-    @ColumnInfo(name = COL_TAG) var tag: String = "",
-    @ColumnInfo(name = COL_NOTIFY) var notify: Boolean = false,
-    @ColumnInfo(name = COL_IMAGEURL) var imageUrl: URL? = null,
-    @ColumnInfo(name = COL_LASTSYNC, typeAffinity = ColumnInfo.INTEGER) var lastSync: Instant = Instant.EPOCH,
-    @ColumnInfo(name = COL_RESPONSEHASH) var responseHash: Int = 0,
-    @ColumnInfo(name = COL_FULLTEXT_BY_DEFAULT) var fullTextByDefault: Boolean = false,
-    @ColumnInfo(name = COL_OPEN_ARTICLES_WITH) var openArticlesWith: String = OPEN_ARTICLE_WITH_APPLICATION_DEFAULT,
-    @ColumnInfo(name = COL_ALTERNATE_ID) var alternateId: Boolean = false,
-    @ColumnInfo(name = COL_CURRENTLY_SYNCING) var currentlySyncing: Boolean = false,
-    // Only update this field when user modifies the feed
-    @ColumnInfo(name = COL_WHEN_MODIFIED) var whenModified: Instant = Instant.EPOCH,
-    @ColumnInfo(name = COL_SITE_FETCHED) var siteFetched: Instant = Instant.EPOCH,
-    @ColumnInfo(name = COL_SKIP_DUPLICATES) var skipDuplicates: Boolean = false,
-    // Time when feed is allowed to be synced again earliest, based on retry-after response header
-    @ColumnInfo(name = COL_RETRY_AFTER) var retryAfter: Instant = Instant.EPOCH,
-    @ColumnInfo(name = COL_SUMMARIZE_ON_OPEN) var summarizeOnOpen: Boolean = false,
-    // FIX: Database has default 0 for fetch_og_images, so match that
-    @ColumnInfo(name = COL_FETCH_OG_IMAGES, defaultValue = "0")
-    var fetchOgImages: Boolean = false,
-    // FIX: Database has default 'undefined' for these two columns
-    @ColumnInfo(name = "local_allow_list", defaultValue = "undefined")
-    var localAllowList: String = "",
-    @ColumnInfo(name = "local_block_list", defaultValue = "undefined")
-    var localBlockList: String = "",
-) {
-    constructor() : this(id = ID_UNSET)
+    @Ignore
+    constructor(
+        @PrimaryKey(autoGenerate = true)
+        @ColumnInfo(name = COL_ID)
+        var id: Long = ID_UNSET,
+        @ColumnInfo(name = COL_TITLE) var title: String = "",
+        @ColumnInfo(name = COL_CUSTOM_TITLE) var customTitle: String = "",
+        @ColumnInfo(name = COL_URL) var url: URL = URL("http://"),
+        @ColumnInfo(name = COL_TAG) var tag: String = "",
+        @ColumnInfo(name = COL_NOTIFY) var notify: Boolean = false,
+        @ColumnInfo(name = COL_IMAGEURL) var imageUrl: URL? = null,
+        @ColumnInfo(name = COL_LASTSYNC, typeAffinity = ColumnInfo.INTEGER) var lastSync: Instant = Instant.EPOCH,
+        @ColumnInfo(name = COL_RESPONSEHASH) var responseHash: Int = 0,
+        @ColumnInfo(name = COL_FULLTEXT_BY_DEFAULT) var fullTextByDefault: Boolean = false,
+        @ColumnInfo(name = COL_OPEN_ARTICLES_WITH) var openArticlesWith: String = OPEN_ARTICLE_WITH_APPLICATION_DEFAULT,
+        @ColumnInfo(name = COL_ALTERNATE_ID) var alternateId: Boolean = false,
+        @ColumnInfo(name = COL_CURRENTLY_SYNCING) var currentlySyncing: Boolean = false,
+        // Only update this field when user modifies the feed
+        @ColumnInfo(name = COL_WHEN_MODIFIED) var whenModified: Instant = Instant.EPOCH,
+        @ColumnInfo(name = COL_SITE_FETCHED) var siteFetched: Instant = Instant.EPOCH,
+        @ColumnInfo(name = COL_SKIP_DUPLICATES) var skipDuplicates: Boolean = false,
+        // Time when feed is allowed to be synced again earliest, based on retry-after response header
+        @ColumnInfo(name = COL_RETRY_AFTER) var retryAfter: Instant = Instant.EPOCH,
+        @ColumnInfo(name = COL_SUMMARIZE_ON_OPEN) var summarizeOnOpen: Boolean = false,
+        @ColumnInfo(name = COL_FETCH_OG_IMAGES) var fetchOgImages: Boolean = false,
+    ) {
+        constructor() : this(id = ID_UNSET)
 
-    val displayTitle: String
-        get() = (customTitle.ifBlank { title })
-}
+        val displayTitle: String
+            get() = (customTitle.ifBlank { title })
+    }

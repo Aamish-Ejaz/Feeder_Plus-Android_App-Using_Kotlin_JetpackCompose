@@ -39,9 +39,6 @@ private const val LOG_TAG = "FEEDER_APPDB"
  * 5: Added feed url field to feed_item
  * 6: Added feed icon field to feeds
  * 7: Migration to Room
- * ...
- * 39: Added fetch_og_images
- * 40: Added local_allow_list and local_block_list to feeds
  */
 @Database(
     entities = [
@@ -57,7 +54,7 @@ private const val LOG_TAG = "FEEDER_APPDB"
     views = [
         FeedsWithItemsForNavDrawer::class,
     ],
-    version = 40,  // <-- INCREMENTED from 39 to 40
+    version = 39,
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -141,23 +138,12 @@ fun getAllMigrations(di: DI) =
         MigrationFrom36To37(di),
         MigrationFrom37To38(di),
         MIGRATION_38_39,
-        MIGRATION_39_40,   // <-- NEW MIGRATION
     )
 
 /*
  * 6 represents legacy database
  * 7 represents new Room database
  */
-
-/**
- * Migration 39 -> 40: Add local_allow_list and local_block_list columns to feeds table.
- */
-@Suppress("ClassName")
-object MIGRATION_39_40 : Migration(39, 40) {
-    override fun migrate(database: SupportSQLiteDatabase) {
-        // Columns already exist, so nothing to add
-    }
-}
 
 /**
  * Moving main articles back to data dir because of issues some have
