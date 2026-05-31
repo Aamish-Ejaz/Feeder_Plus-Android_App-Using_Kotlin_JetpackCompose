@@ -10,7 +10,6 @@ import com.nononsenseapps.feeder.archmodel.PREF_VAL_OPEN_WITH_CUSTOM_TAB
 import com.nononsenseapps.feeder.archmodel.PREF_VAL_OPEN_WITH_READER
 import com.nononsenseapps.feeder.archmodel.PREF_VAL_OPEN_WITH_WEBVIEW
 import com.nononsenseapps.feeder.archmodel.Repository
-import com.nononsenseapps.feeder.background.runOnceBlocklistUpdate
 import com.nononsenseapps.feeder.background.runOnceRssSync
 import com.nononsenseapps.feeder.base.DIAwareViewModel
 import com.nononsenseapps.feeder.db.room.Feed
@@ -45,8 +44,7 @@ class CreateFeedScreenViewModel(
     override var articleOpener: String by mutableSavedStateOf(state, "")
     override var alternateId: Boolean by mutableSavedStateOf(state, false)
     override var summarizeOnOpen: Boolean by mutableSavedStateOf(state, false)
-    override var localBlockList: String by mutableSavedStateOf(state, "")
-    override var localAllowList: String by mutableSavedStateOf(state, "")
+    override var fetchOgImages: Boolean by mutableSavedStateOf(state, false)
     override var allTags: List<String> by mutableStateOf(emptyList())
     override var defaultTitle: String by mutableStateOf(state["feedTitle"] ?: "")
     override var feedImage: String by mutableStateOf(state["feedImage"] ?: "")
@@ -95,11 +93,9 @@ class CreateFeedScreenViewModel(
                         skipDuplicates = skipDuplicates,
                         openArticlesWith = articleOpener,
                         alternateId = alternateId,
-                        summarizeOnOpen = summarizeOnOpen,
-                        localBlockList = localBlockList,
-                        localAllowList = localAllowList,
                         whenModified = Instant.now(),
                         imageUrl = sloppyLinkToStrictURLOrNull(feedImage),
+                        fetchOgImages = fetchOgImages,
                     ),
                 )
 
@@ -108,7 +104,6 @@ class CreateFeedScreenViewModel(
                 feedId = feedId,
                 triggeredByUser = false,
             )
-            runOnceBlocklistUpdate(di)
 
             action(feedId)
         }

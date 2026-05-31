@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -47,6 +48,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
@@ -77,7 +79,9 @@ import com.nononsenseapps.feeder.ui.compose.utils.ImmutableHolder
 import com.nononsenseapps.feeder.ui.compose.utils.ScreenType
 import com.nononsenseapps.feeder.ui.compose.utils.onKeyEventLikeEscape
 import com.nononsenseapps.feeder.util.ActivityLauncher
+import com.nononsenseapps.feeder.util.stripTrackingParameters
 import com.nononsenseapps.feeder.util.unicodeWrap
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import org.kodein.di.compose.LocalDI
 import org.kodein.di.instance
@@ -101,8 +105,14 @@ fun ArticleScreen(
     val isPagingMode by mavm.isPagingMode.collectAsStateWithLifecycle()
     val isAnimatedPaging by mavm.isAnimatedPaging.collectAsStateWithLifecycle()
 
-    val articleScrollState = rememberScrollState()
+    val articleScrollState = rememberScrollState(initial = viewModel.scrollPosition)
     val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(articleScrollState) {
+        snapshotFlow { articleScrollState.value }
+            .debounce(500)
+            .collect { viewModel.saveScrollPosition(it) }
+    }
 
     LaunchedEffect(Unit) {
         mavm.scrollCommand.collect { direction ->
@@ -140,8 +150,12 @@ fun ArticleScreen(
                 val intent =
                     Intent.createChooser(
                         Intent(Intent.ACTION_SEND).apply {
-                            if (viewState.articleLink != null) {
-                                putExtra(Intent.EXTRA_TEXT, viewState.articleLink)
+                            val articleLink = viewState.articleLink
+                            if (articleLink != null) {
+                                putExtra(
+                                    Intent.EXTRA_TEXT,
+                                    stripTrackingParameters(articleLink),
+                                )
                             }
                             putExtra(Intent.EXTRA_TITLE, viewState.articleTitle)
                             type = "text/plain"
@@ -176,6 +190,9 @@ fun ArticleScreen(
         onSummarize = {
             viewModel.summarize()
         },
+        onTranslate = {
+            viewModel.translate()
+        },
         modifier = modifier,
         isPagingMode = isPagingMode,
         isAnimatedPaging = isAnimatedPaging,
@@ -203,6 +220,7 @@ fun ArticleScreen(
     articleScrollState: ScrollState,
     onNavigateUp: () -> Unit,
     onSummarize: () -> Unit,
+    onTranslate: () -> Unit,
     modifier: Modifier = Modifier,
     isPagingMode: Boolean = false,
     isAnimatedPaging: Boolean = false,
@@ -316,6 +334,35 @@ fun ArticleScreen(
                                         },
                                         text = {
                                             Text(stringResource(id = R.string.summarize))
+                                        },
+                                    )
+                                }
+
+                                if (viewState.showTranslate) {
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            onShowToolbarMenu(false)
+                                            onTranslate()
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                Icons.Default.Translate,
+                                                contentDescription = null,
+                                            )
+                                        },
+                                        text = {
+                                            Text(
+                                                stringResource(
+                                                    if (viewState.isShowingTranslated) {
+                                                        R.string.show_original_language
+                                                    } else {
+                                                        R.string.translate_article
+                                                    },
+                                                    viewState.translationSourceLanguage.ifBlank {
+                                                        stringResource(R.string.original_article)
+                                                    },
+                                                ),
+                                            )
                                         },
                                     )
                                 }
@@ -492,6 +539,7 @@ fun ArticleContent(
 
     // Track Y positions of article elements by index for anchor link scrolling
     val elementPositions = remember { mutableMapOf<Int, Float>() }
+    val contentImageUrls = remember(viewState.articleContent) { viewState.articleContent.imageUrls }
 
     ReaderView(
         screenType = screenType,
@@ -529,11 +577,19 @@ fun ArticleContent(
                 else -> null
             },
         image = viewState.image,
-        isFeedText = viewState.textToDisplay == TextToDisplay.CONTENT,
+        showHeaderImage = viewState.textToDisplay == TextToDisplay.CONTENT,
+        contentImageUrls = contentImageUrls,
         modifier = modifier,
         articleScrollState = articleScrollState,
     ) { indexOffset ->
         var offsetCounter = indexOffset
+
+        if (viewState.isTranslationLoading) {
+            offsetCounter++
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
 
         if (viewState.openAiSummary !is OpenAISummaryState.Empty) {
             offsetCounter++

@@ -9,18 +9,14 @@ plugins {
     alias(libs.plugins.ktlint.gradle)
 }
 
-//val commitCount by project.extra {
-//    providers
-//        .exec {
-//            commandLine("git", "rev-list", "--count", "HEAD")
-//        }.standardOutput.asText
-//        .get()
-//        .trim()
-//        .toInt()
-//}
-
 val commitCount by project.extra {
-    3922
+    providers
+        .exec {
+            commandLine("git", "rev-list", "--count", "HEAD")
+        }.standardOutput.asText
+        .get()
+        .trim()
+        .toInt()
 }
 
 val kotlinToolchainVersion =
@@ -44,8 +40,8 @@ android {
         // The version fields are set with actual values to support F-Droid
         // In Play variant, they are overridden and taken from git to support alpha/beta testing.
         // For actual releases they match.
-        versionCode = 3922
-        versionName = "2.18.0"
+        versionCode = 3978
+        versionName = "2.20.0"
         // TLS1.3 is enabled in Android 10 (29) and above
         minSdk = 29
         targetSdk =
@@ -139,7 +135,7 @@ android {
             }
             create("play") {
                 dimension = "store"
-                versionName = "2.18.0"
+                versionName = "2.20.0"
                 versionCode = commitCount
                 applicationIdSuffix = ".play"
             }

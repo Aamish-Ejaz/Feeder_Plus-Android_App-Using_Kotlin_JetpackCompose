@@ -18,6 +18,7 @@ import com.nononsenseapps.feeder.archmodel.SyncFrequency
 import com.nononsenseapps.feeder.archmodel.ThemeOptions
 import com.nononsenseapps.feeder.base.DIAwareViewModel
 import com.nononsenseapps.feeder.openai.OpenAIApi
+import com.nononsenseapps.feeder.openai.canUseAsTranslationApi
 import com.nononsenseapps.feeder.ui.compose.settings.FontSelection
 import com.nononsenseapps.feeder.ui.compose.settings.FontSelection.SystemDefault
 import kotlinx.coroutines.Dispatchers
@@ -163,6 +164,14 @@ class SettingsViewModel(
         repository.setOpenDrawerOnFab(value)
     }
 
+    fun setTranslateArticlePreviewsByDefault(value: Boolean) {
+        repository.setTranslateArticlePreviewsByDefault(value)
+    }
+
+    fun setTranslateArticlesByDefault(value: Boolean) {
+        repository.setTranslateArticlesByDefault(value)
+    }
+
     fun setIsPagingMode(value: Boolean) {
         repository.setIsPagingMode(value)
     }
@@ -171,22 +180,32 @@ class SettingsViewModel(
         repository.setIsAnimatedPaging(value)
     }
 
-    fun onOpenAISettingsEvent(event: OpenAISettingsEvent) {
-        when (event) {
-            is OpenAISettingsEvent.LoadModels -> loadOpenAIModels(event.settings)
-            is OpenAISettingsEvent.UpdateSettings -> repository.setOpenAiSettings(event.settings)
-            is OpenAISettingsEvent.SwitchEditMode -> {
-                val current = _viewState.value.openAIState
-                _viewState.value = _viewState.value.copy(openAIState = current.copy(isEditMode = event.enabled))
-            }
-            is OpenAISettingsEvent.ShowModelsError -> {
-                val current = _viewState.value.openAIState
-                _viewState.value = _viewState.value.copy(openAIState = current.copy(showModelsError = event.show))
-            }
-        }
+    fun onSummaryOpenAISettingsEvent(event: OpenAISettingsEvent) {
+        handleOpenAISettingsEvent(
+            event = event,
+            modelsState = summaryOpenAIModelsState,
+            currentState = { _viewState.value.summaryAIState },
+            updateState = { updatedState -> _viewState.value = _viewState.value.copy(summaryAIState = updatedState) },
+            saveSettings = repository::setOpenAiSettings,
+        )
     }
 
-    private val openAIModelsState = MutableStateFlow<OpenAIModelsState>(OpenAIModelsState.None)
+    fun onTranslationApiSettingsEvent(event: TranslationApiSettingsEvent) {
+        handleOpenAISettingsEvent(
+            event = event,
+            modelsState = translationApiModelsState,
+            currentState = { _viewState.value.translationApiState },
+            updateState = { updatedState -> _viewState.value = _viewState.value.copy(translationApiState = updatedState) },
+            saveSettings = repository::setTranslationApiSettings,
+        )
+    }
+
+    fun setPreferredTranslationLanguage(value: String) {
+        repository.setPreferredTranslationLanguage(value)
+    }
+
+    private val summaryOpenAIModelsState = MutableStateFlow<OpenAIModelsState>(OpenAIModelsState.None)
+    private val translationApiModelsState = MutableStateFlow<TranslationApiModelsState>(OpenAIModelsState.None)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val immutableFeedsSettings =
@@ -211,8 +230,6 @@ class SettingsViewModel(
     private val _viewState = MutableStateFlow(SettingsViewState())
     val viewState: StateFlow<SettingsViewState>
         get() = _viewState.asStateFlow()
-
-    private val perFeedFilteringState = MutableStateFlow(PerFeedFilteringState())
 
     init {
         viewModelScope.launch {
@@ -245,12 +262,16 @@ class SettingsViewModel(
                 repository.showReadingTime,
                 repository.showTitleUnreadCount,
                 repository.openAISettings,
-                openAIModelsState,
+                summaryOpenAIModelsState,
+                repository.translationApiSettings,
+                repository.preferredTranslationLanguage,
+                translationApiModelsState,
                 repository.isOpenDrawerOnFab,
+                repository.translateArticlePreviewsByDefault,
+                repository.translateArticlesByDefault,
                 repository.font,
                 repository.isPagingMode,
                 repository.isAnimatedPaging,
-                perFeedFilteringState,
             ) { params: Array<Any> ->
                 @Suppress("UNCHECKED_CAST")
                 SettingsViewState(
@@ -281,16 +302,24 @@ class SettingsViewModel(
                     isOpenAdjacent = params[24] as Boolean,
                     showReadingTime = params[25] as Boolean,
                     showTitleUnreadCount = params[26] as Boolean,
-                    openAIState =
-                        _viewState.value.openAIState.copy(
+                    summaryAIState =
+                        _viewState.value.summaryAIState.copy(
                             settings = params[27] as OpenAISettings,
                             modelsResult = params[28] as OpenAIModelsState,
                         ),
-                    isOpenDrawerOnFab = params[29] as Boolean,
-                    font = params[30] as FontSelection,
-                    isPagingMode = params[31] as Boolean,
-                    isAnimatedPaging = params[32] as Boolean,
-                    perFeedFilteringState = params[33] as PerFeedFilteringState,
+                    translationApiState =
+                        _viewState.value.translationApiState.copy(
+                            settings = params[29] as OpenAISettings,
+                            modelsResult = params[31] as OpenAIModelsState,
+                        ),
+                    preferredTranslationLanguage = params[30] as String,
+                    canTranslate = (params[29] as OpenAISettings).canUseAsTranslationApi && (params[30] as String).trim().isNotBlank(),
+                    isOpenDrawerOnFab = params[32] as Boolean,
+                    translateArticlePreviewsByDefault = params[33] as Boolean,
+                    translateArticlesByDefault = params[34] as Boolean,
+                    font = params[35] as FontSelection,
+                    isPagingMode = params[36] as Boolean,
+                    isAnimatedPaging = params[37] as Boolean,
                 )
             }.collect {
                 _viewState.value = it
@@ -298,15 +327,18 @@ class SettingsViewModel(
         }
     }
 
-    private fun loadOpenAIModels(settings: OpenAISettings) {
+    private fun loadOpenAIModels(
+        stateFlow: MutableStateFlow<OpenAIModelsState>,
+        settings: OpenAISettings,
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
-            openAIModelsState.value = OpenAIModelsState.Loading
-            openAIModelsState.value =
+            stateFlow.value = OpenAIModelsState.Loading(settings)
+            stateFlow.value =
                 openAIApi.listModelIds(settings).let { res ->
                     when (res) {
-                        is OpenAIApi.ModelsResult.Error -> OpenAIModelsState.Error(res.message ?: "")
+                        is OpenAIApi.ModelsResult.Error -> OpenAIModelsState.Error(res.message ?: "", settings)
                         OpenAIApi.ModelsResult.MissingToken -> OpenAIModelsState.None
-                        is OpenAIApi.ModelsResult.Success -> OpenAIModelsState.Success(res.ids)
+                        is OpenAIApi.ModelsResult.Success -> OpenAIModelsState.Success(res.ids, settings)
                         OpenAIApi.ModelsResult.AzureApiVersionRequired -> OpenAIModelsState.None
                         OpenAIApi.ModelsResult.AzureDeploymentIdRequired -> OpenAIModelsState.None
                     }
@@ -314,33 +346,23 @@ class SettingsViewModel(
         }
     }
 
-    fun onPerFeedFilteringEvent(event: PerFeedFilteringEvent) {
+    private fun handleOpenAISettingsEvent(
+        event: OpenAISettingsEvent,
+        modelsState: MutableStateFlow<OpenAIModelsState>,
+        currentState: () -> OpenAISettingsState,
+        updateState: (OpenAISettingsState) -> Unit,
+        saveSettings: (OpenAISettings) -> Unit,
+    ) {
         when (event) {
-            is PerFeedFilteringEvent.SelectFeed -> {
-                viewModelScope.launch {
-                    val feed = repository.getFeed(event.feedId)
-                    perFeedFilteringState.value = perFeedFilteringState.value.copy(
-                        selectedFeedId = event.feedId,
-                        localBlockList = feed?.localBlockList ?: "",
-                        localAllowList = feed?.localAllowList ?: ""
-                    )
-                }
+            is OpenAISettingsEvent.LoadModels -> loadOpenAIModels(modelsState, event.settings)
+            is OpenAISettingsEvent.UpdateSettings -> saveSettings(event.settings)
+            is OpenAISettingsEvent.SwitchEditMode -> {
+                val current = currentState()
+                updateState(current.copy(isEditMode = event.enabled))
             }
-            is PerFeedFilteringEvent.UpdateLocalBlockList -> {
-                perFeedFilteringState.value = perFeedFilteringState.value.copy(localBlockList = event.value)
-            }
-            is PerFeedFilteringEvent.UpdateLocalAllowList -> {
-                perFeedFilteringState.value = perFeedFilteringState.value.copy(localAllowList = event.value)
-            }
-            PerFeedFilteringEvent.Save -> {
-                val state = perFeedFilteringState.value
-                val feedId = state.selectedFeedId
-                if (feedId != null) {
-                    viewModelScope.launch {
-                        repository.updateLocalBlockList(feedId, state.localBlockList)
-                        repository.updateLocalAllowList(feedId, state.localAllowList)
-                    }
-                }
+            is OpenAISettingsEvent.ShowModelsError -> {
+                val current = currentState()
+                updateState(current.copy(showModelsError = event.show))
             }
         }
     }
@@ -378,28 +400,19 @@ data class SettingsViewState(
     val maxLines: Int = 2,
     val showOnlyTitle: Boolean = false,
     val isOpenAdjacent: Boolean = true,
-    val openAIState: OpenAISettingsState = OpenAISettingsState(),
+    val summaryAIState: OpenAISettingsState = OpenAISettingsState(),
+    val translationApiState: TranslationApiSettingsState = TranslationApiSettingsState(),
+    val preferredTranslationLanguage: String = "",
+    val canTranslate: Boolean = false,
     val showReadingTime: Boolean = false,
     val showTitleUnreadCount: Boolean = false,
     val isOpenDrawerOnFab: Boolean = false,
+    val translateArticlePreviewsByDefault: Boolean = false,
+    val translateArticlesByDefault: Boolean = false,
     val font: FontSelection = SystemDefault,
     val isPagingMode: Boolean = false,
     val isAnimatedPaging: Boolean = false,
-    val perFeedFilteringState: PerFeedFilteringState = PerFeedFilteringState(),
 )
-
-data class PerFeedFilteringState(
-    val selectedFeedId: Long? = null,
-    val localBlockList: String = "",
-    val localAllowList: String = "",
-)
-
-sealed interface PerFeedFilteringEvent {
-    data class SelectFeed(val feedId: Long) : PerFeedFilteringEvent
-    data class UpdateLocalBlockList(val value: String) : PerFeedFilteringEvent
-    data class UpdateLocalAllowList(val value: String) : PerFeedFilteringEvent
-    data object Save : PerFeedFilteringEvent
-}
 
 data class UIFeedSettings(
     val feedId: Long,
@@ -417,14 +430,18 @@ data class OpenAISettingsState(
 sealed interface OpenAIModelsState {
     data object None : OpenAIModelsState
 
-    data object Loading : OpenAIModelsState
+    data class Loading(
+        val settings: OpenAISettings,
+    ) : OpenAIModelsState
 
     data class Success(
         val ids: List<String>,
+        val settings: OpenAISettings,
     ) : OpenAIModelsState
 
     data class Error(
         val message: String,
+        val settings: OpenAISettings,
     ) : OpenAIModelsState
 }
 
@@ -445,3 +462,9 @@ sealed interface OpenAISettingsEvent {
         val show: Boolean,
     ) : OpenAISettingsEvent
 }
+
+typealias TranslationApiSettingsState = OpenAISettingsState
+
+typealias TranslationApiModelsState = OpenAIModelsState
+
+typealias TranslationApiSettingsEvent = OpenAISettingsEvent

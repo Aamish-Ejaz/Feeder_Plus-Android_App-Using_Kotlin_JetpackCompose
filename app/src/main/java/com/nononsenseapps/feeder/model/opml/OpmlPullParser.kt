@@ -46,9 +46,7 @@ private const val ATTR_IMAGE_URL = "imageUrl"
 
 private const val ATTR_OPEN_ARTICLES_WITH = "openArticlesWith"
 
-private const val ATTR_LOCAL_BLOCK_LIST = "localBlockList"
-
-private const val ATTR_LOCAL_ALLOW_LIST = "localAllowList"
+private const val ATTR_FETCH_OG_IMAGES = "fetchOgImages"
 
 private const val TAG_BLOCKED = "blocked"
 
@@ -295,31 +293,11 @@ class OpmlPullParser(
                                 OPML_FEEDER_NAMESPACE,
                                 ATTR_OPEN_ARTICLES_WITH,
                             ) ?: feed.openArticlesWith,
-                        // D:/Fiverr/Orders/testing_Phase/34th/Feeder-master/app/src/main/java/com/nononsenseapps/feeder/model/opml/OpmlPullParser.kt
-
-// Inside readOutlineAsRss function:
-                        localBlockList =
-                            parser.getAttributeValue(
-                                OPML_FEEDER_NAMESPACE,
-                                ATTR_LOCAL_BLOCK_LIST,
-                            )?.let {
-                                unescape(it)
-                                    .split('\n')
-                                    .map { line -> line.trim() }
-                                    .filter { line -> line.isNotEmpty() }
-                                    .joinToString("\n")
-                            } ?: feed.localBlockList,
-                        localAllowList =
-                            parser.getAttributeValue(
-                                OPML_FEEDER_NAMESPACE,
-                                ATTR_LOCAL_ALLOW_LIST,
-                            )?.let {
-                                unescape(it)
-                                    .split('\n')
-                                    .map { line -> line.trim() }
-                                    .filter { line -> line.isNotEmpty() }
-                                    .joinToString("\n")
-                            } ?: feed.localAllowList,
+                        fetchOgImages =
+                            parser
+                                .getAttributeValue(OPML_FEEDER_NAMESPACE, ATTR_FETCH_OG_IMAGES)
+                                ?.toBoolean()
+                                ?: feed.fetchOgImages,
                         imageUrl =
                             parser
                                 .getAttributeValue(OPML_FEEDER_NAMESPACE, ATTR_IMAGE_URL)

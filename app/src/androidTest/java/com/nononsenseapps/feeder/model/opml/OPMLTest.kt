@@ -783,6 +783,15 @@ class OPMLTest : DIAware {
                         UserSettings.SETTING_OPENAI_AZURE_DEPLOYMENT_ID -> "test-deployment"
                         UserSettings.SETTING_OPENAI_REQUEST_TIMEOUT_SECONDS -> "45"
                         UserSettings.SETTING_BLOCKLIST_APPLY_TO_SUMMARIES -> "true"
+                        UserSettings.SETTING_PREFERRED_TRANSLATION_LANGUAGE -> "sv"
+                        UserSettings.SETTING_TRANSLATION_API_KEY -> "test-translation-api-key"
+                        UserSettings.SETTING_TRANSLATION_API_MODEL_ID -> ""
+                        UserSettings.SETTING_TRANSLATION_API_URL -> "https://api.deepl.com"
+                        UserSettings.SETTING_TRANSLATION_API_AZURE_VERSION -> "2024-02-01"
+                        UserSettings.SETTING_TRANSLATION_API_AZURE_DEPLOYMENT_ID -> "translation-deployment"
+                        UserSettings.SETTING_TRANSLATION_API_REQUEST_TIMEOUT_SECONDS -> "90"
+                        UserSettings.SETTING_TRANSLATE_ARTICLE_PREVIEWS_BY_DEFAULT -> "true"
+                        UserSettings.SETTING_TRANSLATE_ARTICLES_BY_DEFAULT -> "false"
                     }
             }
     }
@@ -807,19 +816,19 @@ private val sampleFile: List<String> =
         </title>
       </head>
       <body>
-        <outline feeder:notify="true" feeder:imageUrl="https://example.com/feedImage.png" feeder:fullTextByDefault="true" feeder:openArticlesWith="reader" feeder:alternateId="true" title="&quot;0&quot;" text="&quot;0&quot;" type="rss" xmlUrl="http://example.com/0/rss.xml"/>
-        <outline feeder:notify="false" feeder:fullTextByDefault="false" feeder:openArticlesWith="" feeder:alternateId="false" title="custom &quot;3&quot;" text="custom &quot;3&quot;" type="rss" xmlUrl="http://example.com/3/rss.xml"/>
-        <outline feeder:notify="false" feeder:fullTextByDefault="false" feeder:openArticlesWith="" feeder:alternateId="false" title="custom &quot;6&quot;" text="custom &quot;6&quot;" type="rss" xmlUrl="http://example.com/6/rss.xml"/>
-        <outline feeder:notify="false" feeder:fullTextByDefault="false" feeder:openArticlesWith="" feeder:alternateId="false" title="custom &quot;9&quot;" text="custom &quot;9&quot;" type="rss" xmlUrl="http://example.com/9/rss.xml"/>
+        <outline feeder:notify="true" feeder:imageUrl="https://example.com/feedImage.png" feeder:fullTextByDefault="true" feeder:openArticlesWith="reader" feeder:alternateId="true" feeder:fetchOgImages="false" title="&quot;0&quot;" text="&quot;0&quot;" type="rss" xmlUrl="http://example.com/0/rss.xml"/>
+        <outline feeder:notify="false" feeder:fullTextByDefault="false" feeder:openArticlesWith="" feeder:alternateId="false" feeder:fetchOgImages="false" title="custom &quot;3&quot;" text="custom &quot;3&quot;" type="rss" xmlUrl="http://example.com/3/rss.xml"/>
+        <outline feeder:notify="false" feeder:fullTextByDefault="false" feeder:openArticlesWith="" feeder:alternateId="false" feeder:fetchOgImages="false" title="custom &quot;6&quot;" text="custom &quot;6&quot;" type="rss" xmlUrl="http://example.com/6/rss.xml"/>
+        <outline feeder:notify="false" feeder:fullTextByDefault="false" feeder:openArticlesWith="" feeder:alternateId="false" feeder:fetchOgImages="false" title="custom &quot;9&quot;" text="custom &quot;9&quot;" type="rss" xmlUrl="http://example.com/9/rss.xml"/>
         <outline title="tag1" text="tag1">
-          <outline feeder:notify="false" feeder:fullTextByDefault="false" feeder:openArticlesWith="" feeder:alternateId="false" title="custom &quot;1&quot;" text="custom &quot;1&quot;" type="rss" xmlUrl="http://example.com/1/rss.xml"/>
-          <outline feeder:notify="false" feeder:fullTextByDefault="false" feeder:openArticlesWith="" feeder:alternateId="false" title="custom &quot;4&quot;" text="custom &quot;4&quot;" type="rss" xmlUrl="http://example.com/4/rss.xml"/>
-          <outline feeder:notify="false" feeder:fullTextByDefault="false" feeder:openArticlesWith="" feeder:alternateId="false" title="custom &quot;7&quot;" text="custom &quot;7&quot;" type="rss" xmlUrl="http://example.com/7/rss.xml"/>
+          <outline feeder:notify="false" feeder:fullTextByDefault="false" feeder:openArticlesWith="" feeder:alternateId="false" feeder:fetchOgImages="false" title="custom &quot;1&quot;" text="custom &quot;1&quot;" type="rss" xmlUrl="http://example.com/1/rss.xml"/>
+          <outline feeder:notify="false" feeder:fullTextByDefault="false" feeder:openArticlesWith="" feeder:alternateId="false" feeder:fetchOgImages="false" title="custom &quot;4&quot;" text="custom &quot;4&quot;" type="rss" xmlUrl="http://example.com/4/rss.xml"/>
+          <outline feeder:notify="false" feeder:fullTextByDefault="false" feeder:openArticlesWith="" feeder:alternateId="false" feeder:fetchOgImages="false" title="custom &quot;7&quot;" text="custom &quot;7&quot;" type="rss" xmlUrl="http://example.com/7/rss.xml"/>
         </outline>
         <outline title="tag2" text="tag2">
-          <outline feeder:notify="false" feeder:fullTextByDefault="false" feeder:openArticlesWith="" feeder:alternateId="false" title="custom &quot;2&quot;" text="custom &quot;2&quot;" type="rss" xmlUrl="http://example.com/2/rss.xml"/>
-          <outline feeder:notify="false" feeder:fullTextByDefault="false" feeder:openArticlesWith="" feeder:alternateId="false" title="custom &quot;5&quot;" text="custom &quot;5&quot;" type="rss" xmlUrl="http://example.com/5/rss.xml"/>
-          <outline feeder:notify="false" feeder:fullTextByDefault="false" feeder:openArticlesWith="" feeder:alternateId="false" title="custom &quot;8&quot;" text="custom &quot;8&quot;" type="rss" xmlUrl="http://example.com/8/rss.xml"/>
+          <outline feeder:notify="false" feeder:fullTextByDefault="false" feeder:openArticlesWith="" feeder:alternateId="false" feeder:fetchOgImages="false" title="custom &quot;2&quot;" text="custom &quot;2&quot;" type="rss" xmlUrl="http://example.com/2/rss.xml"/>
+          <outline feeder:notify="false" feeder:fullTextByDefault="false" feeder:openArticlesWith="" feeder:alternateId="false" feeder:fetchOgImages="false" title="custom &quot;5&quot;" text="custom &quot;5&quot;" type="rss" xmlUrl="http://example.com/5/rss.xml"/>
+          <outline feeder:notify="false" feeder:fullTextByDefault="false" feeder:openArticlesWith="" feeder:alternateId="false" feeder:fetchOgImages="false" title="custom &quot;8&quot;" text="custom &quot;8&quot;" type="rss" xmlUrl="http://example.com/8/rss.xml"/>
         </outline>
         <feeder:settings>
           <feeder:setting key="pref_added_feeder_news" value="true"/>
@@ -861,6 +870,15 @@ private val sampleFile: List<String> =
           <feeder:setting key="pref_openai_azure_deployment_id" value="test-deployment"/>
           <feeder:setting key="pref_openai_request_timeout_seconds" value="45"/>
           <feeder:setting key="pref_blocklist_apply_to_summaries" value="true"/>
+          <feeder:setting key="pref_openai_translation_language" value="sv"/>
+          <feeder:setting key="pref_translation_api_key" value="test-translation-api-key"/>
+          <feeder:setting key="pref_translation_api_model_id" value=""/>
+          <feeder:setting key="pref_translation_api_url" value="https://api.deepl.com"/>
+          <feeder:setting key="pref_translation_api_azure_version" value="2024-02-01"/>
+          <feeder:setting key="pref_translation_api_azure_deployment_id" value="translation-deployment"/>
+          <feeder:setting key="pref_translation_api_request_timeout_seconds" value="90"/>
+          <feeder:setting key="pref_translate_feed_cards_by_default" value="true"/>
+          <feeder:setting key="pref_translate_articles_by_default" value="false"/>
           <feeder:blocked pattern="foo"/>
         </feeder:settings>
       </body>

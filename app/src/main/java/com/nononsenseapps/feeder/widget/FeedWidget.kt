@@ -21,8 +21,8 @@ import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
-import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.lazy.LazyColumn
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
@@ -55,10 +55,14 @@ import com.nononsenseapps.feeder.model.RssLocalSync
 import com.nononsenseapps.feeder.ui.MainActivity
 import com.nononsenseapps.feeder.ui.compose.feed.FeedListItem
 import com.nononsenseapps.feeder.util.DEEP_LINK_BASE_URI
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import org.kodein.di.instance
 import java.net.URL
 import java.time.Instant
@@ -129,7 +133,9 @@ private fun buildWidgetStateFlow(
                 .allowHardware(false)
                 .build()
 
-        (imageLoader.execute(request) as? SuccessResult)?.image?.toBitmap(200, 200, Bitmap.Config.RGB_565)
+        withTimeoutOrNull(1_000L) {
+            (imageLoader.execute(request) as? SuccessResult)?.image?.toBitmap(200, 200, Bitmap.Config.RGB_565)
+        }
     }
 
     val repository: Repository by app.di.instance()
@@ -152,7 +158,8 @@ private fun buildWidgetStateFlow(
         } else {
             WidgetState.Ready(items)
         }
-    }
+    }.onStart { emit(WidgetState.Syncing) }
+        .flowOn(Dispatchers.IO)
 }
 
 class FeedWidget : GlanceAppWidget() {
@@ -278,8 +285,7 @@ class FeedWidget : GlanceAppWidget() {
                             actionStartActivity(
                                 Intent(Intent.ACTION_VIEW, Uri.parse("$DEEP_LINK_BASE_URI/article/${item.id}")),
                             ),
-                        )
-                        .background(GlanceTheme.colors.surfaceVariant)
+                        ).background(GlanceTheme.colors.surfaceVariant)
                         .padding(8.dp),
                 verticalAlignment = Alignment.Top,
             ) {

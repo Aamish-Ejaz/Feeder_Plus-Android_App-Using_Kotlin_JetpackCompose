@@ -116,7 +116,6 @@ import com.nononsenseapps.feeder.db.room.ID_SAVED_ARTICLES
 import com.nononsenseapps.feeder.db.room.ID_UNSET
 import com.nononsenseapps.feeder.model.LocaleOverride
 import com.nononsenseapps.feeder.model.export.exportSavedArticles
-import com.nononsenseapps.feeder.model.export.importSavedArticles
 import com.nononsenseapps.feeder.model.opml.exportOpml
 import com.nononsenseapps.feeder.model.opml.importOpml
 import com.nononsenseapps.feeder.ui.compose.components.safeSemantics
@@ -126,6 +125,7 @@ import com.nononsenseapps.feeder.ui.compose.empty.NothingToRead
 import com.nononsenseapps.feeder.ui.compose.feedarticle.FeedListFilterCallback
 import com.nononsenseapps.feeder.ui.compose.feedarticle.FeedScreenViewState
 import com.nononsenseapps.feeder.ui.compose.feedarticle.FeedViewModel
+import com.nononsenseapps.feeder.ui.compose.feedarticle.TranslatedFeedCards
 import com.nononsenseapps.feeder.ui.compose.feedarticle.onlyUnread
 import com.nononsenseapps.feeder.ui.compose.feedarticle.onlyUnreadAndSaved
 import com.nononsenseapps.feeder.ui.compose.material3.DrawerState
@@ -151,6 +151,7 @@ import com.nononsenseapps.feeder.ui.compose.utils.onKeyEventLikeEscape
 import com.nononsenseapps.feeder.util.ActivityLauncher
 import com.nononsenseapps.feeder.util.ToastMaker
 import com.nononsenseapps.feeder.util.logDebug
+import com.nononsenseapps.feeder.util.stripTrackingParameters
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.kodein.di.compose.LocalDI
@@ -173,29 +174,19 @@ fun FeedScreen(
 ) {
     val toastMaker: ToastMaker by instance()
     val viewState: FeedScreenViewState by viewModel.viewState.collectAsStateWithLifecycle()
+    val translatedFeedCards by viewModel.translatedFeedCards.collectAsStateWithLifecycle()
     val pagedFeedItems = viewModel.currentFeedListItems.collectAsLazyPagingItems()
     val pagedNavDrawerItems = viewModel.pagedNavDrawerItems.collectAsLazyPagingItems()
 
     val di = LocalDI.current
     val savedArticleExporter =
         rememberLauncherForActivityResult(
-            ActivityResultContracts.CreateDocument("text/plain"),
+            ActivityResultContracts.CreateDocument("text/x-opml"),
         ) { uri ->
             if (uri != null) {
                 val applicationCoroutineScope: ApplicationCoroutineScope by di.instance()
                 applicationCoroutineScope.launch {
                     exportSavedArticles(di, uri)
-                }
-            }
-        }
-    val savedArticleImporter =
-        rememberLauncherForActivityResult(
-            ActivityResultContracts.OpenDocument(),
-        ) { uri ->
-            if (uri != null) {
-                val applicationCoroutineScope: ApplicationCoroutineScope by di.instance()
-                applicationCoroutineScope.launch {
-                    importSavedArticles(di, uri)
                 }
             }
         }
@@ -375,17 +366,6 @@ fun FeedScreen(
                     }
                 }
             },
-            onImportSavedArticles = {
-                try {
-                    savedArticleImporter.launch(
-                        arrayOf("text/plain", "application/octet-stream", "*/*"),
-                    )
-                } catch (_: Exception) {
-                    coroutineScope.launch {
-                        toastMaker.makeToast("Failed to import saved articles")
-                    }
-                }
-            },
             drawerState = drawerState,
             markAsUnread = { itemId, unread ->
                 if (unread) {
@@ -415,12 +395,12 @@ fun FeedScreen(
                     }
                 }
             },
-//            markBeforeAsRead = { cursor ->
-//                viewModel.markBeforeAsRead(cursor)
-//            },
-//            markAfterAsRead = { cursor ->
-//                viewModel.markAfterAsRead(cursor)
-//            },
+            markBeforeAsRead = { cursor ->
+                viewModel.markBeforeAsRead(cursor)
+            },
+            markAfterAsRead = { cursor ->
+                viewModel.markAfterAsRead(cursor)
+            },
             onOpenFeedItem = { itemId ->
                 viewModel.openArticle(
                     itemId = itemId,
@@ -479,6 +459,8 @@ fun FeedScreen(
             feedListState = feedListState,
             feedGridState = feedGridState,
             pagedFeedItems = pagedFeedItems,
+            translatedFeedCards = translatedFeedCards,
+            onTranslateFeedCard = viewModel::translateFeedCardIfNeeded,
         )
     }
 }
@@ -507,12 +489,11 @@ fun FeedScreen(
     onImport: () -> Unit,
     onExportOPML: () -> Unit,
     onExportSavedArticles: () -> Unit,
-    onImportSavedArticles: () -> Unit,
     drawerState: DrawerState,
     markAsUnread: (Long, Boolean) -> Unit,
     markAsReadOnSwipe: (id: Long, unread: Boolean, saved: Boolean) -> Unit,
-//    markBeforeAsRead: (FeedItemCursor) -> Unit,
-//    markAfterAsRead: (FeedItemCursor) -> Unit,
+    markBeforeAsRead: (FeedItemCursor) -> Unit,
+    markAfterAsRead: (FeedItemCursor) -> Unit,
     onOpenFeedItem: (Long) -> Unit,
     onOpenFeedItemInReader: (Long) -> Unit,
     onOpenFeedItemInCustomTab: (Long) -> Unit,
@@ -525,6 +506,8 @@ fun FeedScreen(
     feedListState: LazyListState,
     feedGridState: LazyStaggeredGridState,
     pagedFeedItems: LazyPagingItems<FeedListItem>,
+    translatedFeedCards: TranslatedFeedCards,
+    onTranslateFeedCard: (FeedListItem) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -900,21 +883,6 @@ fun FeedScreen(
                             DropdownMenuItem(
                                 onClick = {
                                     onShowToolbarMenu(false)
-                                    onImportSavedArticles()
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        Icons.Default.ImportExport,
-                                        contentDescription = null,
-                                    )
-                                },
-                                text = {
-                                    Text("Import saved articles")
-                                },
-                            )
-                            DropdownMenuItem(
-                                onClick = {
-                                    onShowToolbarMenu(false)
                                     onExportSavedArticles()
                                 },
                                 leadingIcon = {
@@ -985,8 +953,8 @@ fun FeedScreen(
                     onAddFeed = onAddFeed,
                     markAsUnread = markAsUnread,
                     markAsReadOnSwipe = markAsReadOnSwipe,
-//                    markBeforeAsRead = markBeforeAsRead,
-//                    markAfterAsRead = markAfterAsRead,
+                    markBeforeAsRead = markBeforeAsRead,
+                    markAfterAsRead = markAfterAsRead,
                     onItemClick = onOpenFeedItem,
                     onOpenFeedItemInReader = onOpenFeedItemInReader,
                     onOpenFeedItemInCustomTab = onOpenFeedItemInCustomTab,
@@ -994,6 +962,8 @@ fun FeedScreen(
                     onSetBookmark = onSetBookmark,
                     gridState = feedGridState,
                     pagedFeedItems = pagedFeedItems,
+                    translatedFeedCards = translatedFeedCards,
+                    onTranslateFeedCard = onTranslateFeedCard,
                     modifier = innerModifier,
                 )
 
@@ -1012,8 +982,8 @@ fun FeedScreen(
                     onAddFeed = onAddFeed,
                     markAsUnread = markAsUnread,
                     markAsReadOnSwipe = markAsReadOnSwipe,
-//                    markBeforeAsRead = markBeforeAsRead,
-//                    markAfterAsRead = markAfterAsRead,
+                    markBeforeAsRead = markBeforeAsRead,
+                    markAfterAsRead = markAfterAsRead,
                     onItemClick = onOpenFeedItem,
                     onOpenFeedItemInReader = onOpenFeedItemInReader,
                     onOpenFeedItemInCustomTab = onOpenFeedItemInCustomTab,
@@ -1021,6 +991,8 @@ fun FeedScreen(
                     onSetBookmark = onSetBookmark,
                     listState = feedListState,
                     pagedFeedItems = pagedFeedItems,
+                    translatedFeedCards = translatedFeedCards,
+                    onTranslateFeedCard = onTranslateFeedCard,
                     modifier = innerModifier,
                 )
         }
@@ -1244,8 +1216,8 @@ fun FeedListContent(
     onAddFeed: () -> Unit,
     markAsUnread: (Long, Boolean) -> Unit,
     markAsReadOnSwipe: (id: Long, unread: Boolean, saved: Boolean) -> Unit,
-//    markBeforeAsRead: (FeedItemCursor) -> Unit,
-//    markAfterAsRead: (FeedItemCursor) -> Unit,
+    markBeforeAsRead: (FeedItemCursor) -> Unit,
+    markAfterAsRead: (FeedItemCursor) -> Unit,
     onItemClick: (Long) -> Unit,
     onOpenFeedItemInReader: (Long) -> Unit,
     onOpenFeedItemInCustomTab: (Long) -> Unit,
@@ -1253,6 +1225,8 @@ fun FeedListContent(
     onSetBookmark: (Long, Boolean) -> Unit,
     listState: LazyListState,
     pagedFeedItems: LazyPagingItems<FeedListItem>,
+    translatedFeedCards: TranslatedFeedCards,
+    onTranslateFeedCard: (FeedListItem) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -1335,10 +1309,15 @@ fun FeedListContent(
                     key = pagedFeedItems.itemKey { it.id },
                     contentType = pagedFeedItems.itemContentType { it.contentType(viewState.feedItemStyle) },
                 ) { itemIndex ->
-                    val previewItem = pagedFeedItems[itemIndex] ?: PLACEHOLDER_ITEM
+                    val loadedItem = pagedFeedItems[itemIndex] ?: PLACEHOLDER_ITEM
+                    val previewItem = translatedFeedCards.merge(loadedItem)
 
                     val itemCoroutineScope = rememberCoroutineScope()
                     var itemWasVisible by remember(previewItem.id) { mutableStateOf(false) }
+
+                    LaunchedEffect(loadedItem.id, loadedItem.title, loadedItem.snippet, translatedFeedCards.generation, onTranslateFeedCard) {
+                        onTranslateFeedCard(loadedItem)
+                    }
 
                     // Gets executed when only unread items are being shown
                     // Marks items which have been visible as read when they scroll off screen
@@ -1347,7 +1326,7 @@ fun FeedListContent(
                             if (itemWasVisible) {
                                 coroutineScope.launch {
                                     logDebug(LOG_TAG, "Marking ${previewItem.id} as read")
-                                    markAsUnread(previewItem.id, !previewItem.unread)
+                                    markAsUnread(previewItem.id, false)
                                 }
                             }
                         }
@@ -1370,19 +1349,16 @@ fun FeedListContent(
                         maxLines = viewState.maxLines,
                         showOnlyTitle = viewState.showOnlyTitle,
                         showReadingTime = viewState.showReadingTime,
-//                        onMarkAboveAsRead = {
-//                            markBeforeAsRead(previewItem.cursor)
-//                            if (viewState.filter.onlyUnread) {
-//                                coroutineScope.launch {
-//                                    listState.scrollToItem(0)
-//                                }
-//                            }
-//                        },
-//                        onMarkBelowAsRead = {
-//                            markAfterAsRead(previewItem.cursor)
-//                        },
-                        onMarkAsRead = {
-                            markAsUnread(previewItem.id, !previewItem.unread)
+                        onMarkAboveAsRead = {
+                            markBeforeAsRead(previewItem.cursor)
+                            if (viewState.filter.onlyUnread) {
+                                coroutineScope.launch {
+                                    listState.scrollToItem(0)
+                                }
+                            }
+                        },
+                        onMarkBelowAsRead = {
+                            markAfterAsRead(previewItem.cursor)
                         },
                         onToggleBookmark = {
                             onSetBookmark(previewItem.id, !previewItem.bookmarked)
@@ -1392,7 +1368,10 @@ fun FeedListContent(
                                 Intent.createChooser(
                                     Intent(Intent.ACTION_SEND).apply {
                                         if (previewItem.link != null) {
-                                            putExtra(Intent.EXTRA_TEXT, previewItem.link)
+                                            putExtra(
+                                                Intent.EXTRA_TEXT,
+                                                stripTrackingParameters(previewItem.link),
+                                            )
                                         }
                                         putExtra(Intent.EXTRA_TITLE, previewItem.title)
                                         type = "text/plain"
@@ -1448,7 +1427,7 @@ fun FeedListContent(
                                                         // Marks as read in disposable effect
                                                     } else {
                                                         logDebug(LOG_TAG, "Item $itemIndex marking as read")
-                                                        markAsUnread(previewItem.id, !previewItem.unread)
+                                                        markAsUnread(previewItem.id, false)
                                                     }
                                                 }
                                             }
@@ -1502,8 +1481,8 @@ fun FeedGridContent(
     onAddFeed: () -> Unit,
     markAsUnread: (Long, Boolean) -> Unit,
     markAsReadOnSwipe: (id: Long, unread: Boolean, saved: Boolean) -> Unit,
-//    markBeforeAsRead: (FeedItemCursor) -> Unit,
-//    markAfterAsRead: (FeedItemCursor) -> Unit,
+    markBeforeAsRead: (FeedItemCursor) -> Unit,
+    markAfterAsRead: (FeedItemCursor) -> Unit,
     onItemClick: (Long) -> Unit,
     onOpenFeedItemInReader: (Long) -> Unit,
     onOpenFeedItemInCustomTab: (Long) -> Unit,
@@ -1511,6 +1490,8 @@ fun FeedGridContent(
     onSetBookmark: (Long, Boolean) -> Unit,
     gridState: LazyStaggeredGridState,
     pagedFeedItems: LazyPagingItems<FeedListItem>,
+    translatedFeedCards: TranslatedFeedCards,
+    onTranslateFeedCard: (FeedListItem) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -1572,10 +1553,15 @@ fun FeedGridContent(
                     key = pagedFeedItems.itemKey { it.id },
                     contentType = pagedFeedItems.itemContentType { it.contentType(viewState.feedItemStyle) },
                 ) { itemIndex ->
-                    val previewItem = pagedFeedItems[itemIndex] ?: PLACEHOLDER_ITEM
+                    val loadedItem = pagedFeedItems[itemIndex] ?: PLACEHOLDER_ITEM
+                    val previewItem = translatedFeedCards.merge(loadedItem)
 
                     val itemCoroutineScope = rememberCoroutineScope()
                     var itemWasVisible by remember(previewItem.id) { mutableStateOf(false) }
+
+                    LaunchedEffect(loadedItem.id, loadedItem.title, loadedItem.snippet, translatedFeedCards.generation, onTranslateFeedCard) {
+                        onTranslateFeedCard(loadedItem)
+                    }
 
                     // Gets executed when only unread items are being shown
                     // Marks items which have been visible as read when they scroll off screen
@@ -1584,7 +1570,7 @@ fun FeedGridContent(
                             if (itemWasVisible) {
                                 coroutineScope.launch {
                                     logDebug(LOG_TAG, "Marking ${previewItem.id} as read")
-                                    markAsUnread(previewItem.id, !previewItem.unread)
+                                    markAsUnread(previewItem.id, false)
                                 }
                             }
                         }
@@ -1607,19 +1593,16 @@ fun FeedGridContent(
                         maxLines = viewState.maxLines,
                         showOnlyTitle = viewState.showOnlyTitle,
                         showReadingTime = viewState.showReadingTime,
-//                        onMarkAboveAsRead = {
-//                            markBeforeAsRead(previewItem.cursor)
-//                            if (viewState.filter.onlyUnread) {
-//                                coroutineScope.launch {
-//                                    gridState.scrollToItem(0)
-//                                }
-//                            }
-//                        },
-//                        onMarkBelowAsRead = {
-//                            markAfterAsRead(previewItem.cursor)
-//                        },
-                        onMarkAsRead = {
-                            markAsUnread(previewItem.id, !previewItem.unread)
+                        onMarkAboveAsRead = {
+                            markBeforeAsRead(previewItem.cursor)
+                            if (viewState.filter.onlyUnread) {
+                                coroutineScope.launch {
+                                    gridState.scrollToItem(0)
+                                }
+                            }
+                        },
+                        onMarkBelowAsRead = {
+                            markAfterAsRead(previewItem.cursor)
                         },
                         onToggleBookmark = {
                             onSetBookmark(previewItem.id, !previewItem.bookmarked)
@@ -1629,7 +1612,10 @@ fun FeedGridContent(
                                 Intent.createChooser(
                                     Intent(Intent.ACTION_SEND).apply {
                                         if (previewItem.link != null) {
-                                            putExtra(Intent.EXTRA_TEXT, previewItem.link)
+                                            putExtra(
+                                                Intent.EXTRA_TEXT,
+                                                stripTrackingParameters(previewItem.link),
+                                            )
                                         }
                                         putExtra(Intent.EXTRA_TITLE, previewItem.title)
                                         type = "text/plain"
@@ -1669,7 +1655,7 @@ fun FeedGridContent(
                                                     // Marks as read in disposable effect
                                                 } else {
                                                     logDebug(LOG_TAG, "Item $itemIndex marking as read")
-                                                    markAsUnread(previewItem.id, !previewItem.unread)
+                                                    markAsUnread(previewItem.id, false)
                                                 }
                                             }
                                         }

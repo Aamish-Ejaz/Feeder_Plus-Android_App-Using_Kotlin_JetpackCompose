@@ -10,7 +10,6 @@ import com.nononsenseapps.feeder.archmodel.PREF_VAL_OPEN_WITH_CUSTOM_TAB
 import com.nononsenseapps.feeder.archmodel.PREF_VAL_OPEN_WITH_READER
 import com.nononsenseapps.feeder.archmodel.PREF_VAL_OPEN_WITH_WEBVIEW
 import com.nononsenseapps.feeder.archmodel.Repository
-import com.nononsenseapps.feeder.background.runOnceBlocklistUpdate
 import com.nononsenseapps.feeder.background.runOnceRssSync
 import com.nononsenseapps.feeder.base.DIAwareViewModel
 import com.nononsenseapps.feeder.db.room.Feed
@@ -48,25 +47,13 @@ class EditFeedScreenViewModel(
     override var articleOpener: String by mutableSavedStateOf(state, "")
     override var alternateId: Boolean by mutableSavedStateOf(state, false)
     override var summarizeOnOpen: Boolean by mutableSavedStateOf(state, false)
-    override var localBlockList: String by mutableSavedStateOf(state, "")
-    override var localAllowList: String by mutableSavedStateOf(state, "")
+    override var fetchOgImages: Boolean by mutableSavedStateOf(state, false)
     override var allTags: List<String> by mutableStateOf(emptyList())
 
     override var feedImage: String by mutableStateOf("")
 
     // Only set when loading feed
     override var defaultTitle: String by mutableStateOf("")
-
-    fun onPerFeedFilteringEvent(event: EditFeedFilteringEvent) {
-        when (event) {
-            is EditFeedFilteringEvent.UpdateLocalBlockList -> {
-                localBlockList = event.value
-            }
-            is EditFeedFilteringEvent.UpdateLocalAllowList -> {
-                localAllowList = event.value
-            }
-        }
-    }
 
     override val isOpenItemWithBrowser: Boolean
         get() = articleOpener == PREF_VAL_OPEN_WITH_BROWSER
@@ -126,11 +113,8 @@ class EditFeedScreenViewModel(
             if (!state.contains("summarizeOnOpen")) {
                 summarizeOnOpen = feed.summarizeOnOpen
             }
-            if (!state.contains("localBlockList")) {
-                localBlockList = feed.localBlockList
-            }
-            if (!state.contains("localAllowList")) {
-                localAllowList = feed.localAllowList
+            if (!state.contains("fetchOgImages")) {
+                fetchOgImages = feed.fetchOgImages
             }
 
             repository.allTags
@@ -158,8 +142,7 @@ class EditFeedScreenViewModel(
                     openArticlesWith = articleOpener,
                     alternateId = alternateId,
                     summarizeOnOpen = summarizeOnOpen,
-                    localBlockList = localBlockList,
-                    localAllowList = localAllowList,
+                    fetchOgImages = fetchOgImages,
                 )
 
             // No point in doing anything unless they actually differ
@@ -175,16 +158,12 @@ class EditFeedScreenViewModel(
                     feedId = savedId,
                     triggeredByUser = false,
                 )
-                runOnceBlocklistUpdate(di)
             }
 
             action(feed.id)
         }
 }
-sealed interface EditFeedFilteringEvent {
-    data class UpdateLocalBlockList(val value: String) : EditFeedFilteringEvent
-    data class UpdateLocalAllowList(val value: String) : EditFeedFilteringEvent
-}
+
 internal fun isValidUrlOrUri(value: String): Boolean =
     try {
         URL(value)
