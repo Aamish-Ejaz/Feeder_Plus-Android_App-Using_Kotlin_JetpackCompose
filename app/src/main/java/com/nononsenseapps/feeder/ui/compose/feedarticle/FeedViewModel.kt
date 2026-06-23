@@ -182,24 +182,18 @@ class FeedViewModel(
     private val toolbarVisible: MutableStateFlow<Boolean> =
         MutableStateFlow(state["toolbarMenuVisible"] ?: false)
 
+    // FeedViewModel.kt ke init block mein (pehle se jo code hai uske saath)
     init {
         viewModelScope.launch {
-            combine(
-                repository.translateArticlePreviewsByDefault,
-                repository.translationApiSettings,
-                repository.preferredTranslationLanguage,
-            ) { shouldTranslate, settings, targetLanguage ->
-                feedCardTranslationConfig(
-                    enabled = shouldTranslate,
-                    settings = settings,
-                    targetLanguage = targetLanguage,
-                )
-            }.distinctUntilChanged()
-                .collect {
-                    inFlightFeedCardTranslations.clear()
-                    translatedFeedCardEntries.value = emptyMap()
-                    feedCardTranslationGeneration.update { it + 1 }
+            // Saare tags load karo
+            repository.allTags.collect { tags ->
+                // Agar user ne pehle se koi tag expand nahi kiya (empty set hai), to saare expand kar do
+                if (repository.expandedTags.value.isEmpty() && tags.isNotEmpty()) {
+                    tags.forEach { tag ->
+                        repository.toggleTagExpansion(tag) // yeh expand kar dega
+                    }
                 }
+            }
         }
     }
 

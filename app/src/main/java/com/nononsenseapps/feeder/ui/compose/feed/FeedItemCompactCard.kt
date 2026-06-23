@@ -59,6 +59,8 @@ sealed interface FeedItemEvent {
 
     data object MarkBelowAsRead : FeedItemEvent
 
+    data object ToggleReadStatus : FeedItemEvent
+
     data object ShareItem : FeedItemEvent
 
     data object ToggleBookmarked : FeedItemEvent
@@ -185,6 +187,7 @@ private fun FeedItemTitle(
                 onOpenFeedItemInBrowser = { onEvent(FeedItemEvent.OpenInBrowser) },
                 onMarkAboveAsRead = { onEvent(FeedItemEvent.MarkAboveAsRead) },
                 onMarkBelowAsRead = { onEvent(FeedItemEvent.MarkBelowAsRead) },
+                onMarkAsRead = { onEvent(FeedItemEvent.ToggleReadStatus) },
                 onShareItem = { onEvent(FeedItemEvent.ShareItem) },
                 onToggleBookmark = { onEvent(FeedItemEvent.ToggleBookmarked) },
                 dropDownMenuExpanded = state.dropDownMenuExpanded,
@@ -243,11 +246,11 @@ private fun Preview() {
                             title = "title",
                             snippet =
                                 "snippet which is quite long as you might expect from a snipper of a story." +
-                                    " It keeps going and going and going and going and going and going and going" +
-                                    " and going and going and going and going and going and going and going" +
-                                    " and going and going and going and going and going and going and going" +
-                                    " and going and going and going and going and going and going and going" +
-                                    " and going and going and going and going and going and going and snowing",
+                                        " It keeps going and going and going and going and going and going and going" +
+                                        " and going and going and going and going and going and going and going" +
+                                        " and going and going and going and going and going and going and going" +
+                                        " and going and going and going and going and going and going and going" +
+                                        " and going and going and going and going and going and going and snowing",
                             feedTitle = "Super Duper Feed One two three hup di too dasf dsaf asd fsa dfasdf",
                             pubDate = "Jun 9, 2021",
                             unread = true,
@@ -280,13 +283,13 @@ private fun PreviewWithImageUnread() {
                                 title = "title can be one line",
                                 snippet =
                                     "snippet which is quite long as you might expect from a" +
-                                        " snipper of a story. It keeps going and going and going" +
-                                        " and going and going and going and going and going and" +
-                                        " going and going and going and going and going and going" +
-                                        " and going and going and going and going and going and" +
-                                        " going and going and going and going and going and going" +
-                                        " and going and going and going and going and going and" +
-                                        " going and going and going and going and snowing",
+                                            " snipper of a story. It keeps going and going and going" +
+                                            " and going and going and going and going and going and" +
+                                            " going and going and going and going and going and going" +
+                                            " and going and going and going and going and going and" +
+                                            " going and going and going and going and going and going" +
+                                            " and going and going and going and going and going and" +
+                                            " going and going and going and going and snowing",
                                 feedTitle = "Super Feed",
                                 pubDate = "Jun 9, 2021",
                                 unread = true,
@@ -320,13 +323,13 @@ private fun PreviewWithImageRead() {
                                 title = "title can be one line",
                                 snippet =
                                     "snippet which is quite long as you might expect from a" +
-                                        " snipper of a story. It keeps going and going and going" +
-                                        " and going and going and going and going and going and" +
-                                        " going and going and going and going and going and going" +
-                                        " and going and going and going and going and going and" +
-                                        " going and going and going and going and going and going" +
-                                        " and going and going and going and going and going and" +
-                                        " going and going and going and going and snowing",
+                                            " snipper of a story. It keeps going and going and going" +
+                                            " and going and going and going and going and going and" +
+                                            " going and going and going and going and going and going" +
+                                            " and going and going and going and going and going and" +
+                                            " going and going and going and going and going and going" +
+                                            " and going and going and going and going and going and" +
+                                            " going and going and going and going and snowing",
                                 feedTitle = "Super Duper Feed",
                                 pubDate = "Jun 9, 2021",
                                 unread = false,

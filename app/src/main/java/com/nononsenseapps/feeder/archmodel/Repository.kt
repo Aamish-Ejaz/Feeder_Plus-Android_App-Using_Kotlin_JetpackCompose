@@ -875,6 +875,24 @@ class Repository(
         feedStore.setRetryAfterForFeedsWithBaseUrl(host = host, retryAfter = retryAfter)
     }
 
+
+    // Repository.kt ke andar existing functions ko is tarah badlein:
+    suspend fun updateLocalBlockList(feedId: Long, blockList: String) {
+        feedStore.updateLocalBlockList(feedId, blockList)
+
+        val blocklistDao: com.nononsenseapps.feeder.db.room.BlocklistDao by instance()
+        blocklistDao.clearBlockStatusForFeed(feedId)
+        blocklistDao.applyPerFeedFilters(feedId, Instant.now())
+    }
+
+    suspend fun updateLocalAllowList(feedId: Long, allowList: String) {
+        feedStore.updateLocalAllowList(feedId, allowList)
+
+        val blocklistDao: com.nononsenseapps.feeder.db.room.BlocklistDao by instance()
+        blocklistDao.clearBlockStatusForFeed(feedId)
+        blocklistDao.applyPerFeedFilters(feedId, Instant.now())
+    }
+
     companion object {
         private const val LOG_TAG = "FEEDER_REPO"
     }

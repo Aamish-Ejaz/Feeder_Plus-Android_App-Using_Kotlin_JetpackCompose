@@ -39,11 +39,22 @@ class BlocklistUpdateJob(
         val onlyNew = params.extras.getBoolean(ARG_ONLY_NEW, false)
         val feedId = params.extras.getLong(ARG_FEED_ID, ID_UNSET)
         val applyToSummaries = settingsStore.applyBlocklistToSummaries.value
+        val now = Instant.now()
 
         when {
-            feedId != ID_UNSET -> blocklistDao.setItemBlockStatusForNewInFeed(feedId, Instant.now(), applyToSummaries)
-            onlyNew -> blocklistDao.setItemBlockStatusWhereNull(Instant.now(), applyToSummaries)
-            else -> blocklistDao.setItemBlockStatus(Instant.now(), applyToSummaries)
+            // Specific feed and only new items
+            feedId != ID_UNSET && onlyNew -> {
+                blocklistDao.setItemBlockStatusForNewInFeed(feedId, now, applyToSummaries)
+            }
+            // Specific feed but not onlyNew -> refresh that feed entirely
+            feedId != ID_UNSET -> {
+                blocklistDao.clearBlockStatusForFeed(feedId)
+                blocklistDao.setItemBlockStatusForNewInFeed(feedId, now, applyToSummaries)
+            }
+            // Global refresh (when patterns changed) – full reset
+            else -> {
+                blocklistDao.refreshAllBlockStatus(now, applyToSummaries)
+            }
         }
 
         logDebug(LOG_TAG, "Work done!")
@@ -55,7 +66,6 @@ class BlocklistUpdateJob(
 }
 
 fun runOnceBlocklistUpdate(di: DI) {
-    val repository: Repository by di.instance()
     val context: Application by di.instance()
     val jobScheduler: JobScheduler? = context.getSystemService()
 
@@ -69,7 +79,6 @@ fun runOnceBlocklistUpdate(di: DI) {
         JobInfo
             .Builder(BackgroundJobId.BLOCKLIST_UPDATE.jobId, componentName)
             .setRequiredNetworkType(JobInfo.NETWORK_TYPE_NONE)
-            // Older versions of Android enforce a constraint to be present. Hence the small delay
             .setMinimumLatency(1)
             .build()
 

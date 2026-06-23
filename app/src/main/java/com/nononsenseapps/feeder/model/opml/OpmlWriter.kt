@@ -242,6 +242,14 @@ abstract class BodyTag(
             openArticlesWith = feed.openArticlesWith
             alternateId = feed.alternateId
             fetchOgImages = feed.fetchOgImages
+            // Per-feed filters: only write if non-empty
+            if (feed.localBlockList.isNotBlank()) {
+                // Newlines ko comma se replace kar rahe hain taake XML attribute mein merge na hon
+                localBlockList = escape(feed.localBlockList.split('\n').filter { it.isNotBlank() }.joinToString(","))
+            }
+            if (feed.localAllowList.isNotBlank()) {
+                localAllowList = escape(feed.localAllowList.split('\n').filter { it.isNotBlank() }.joinToString(","))
+            }
         }
 }
 
@@ -301,6 +309,16 @@ class Outline : BodyTag("outline") {
         get() = attributes["feeder:fetchOgImages"]!!.toBoolean()
         set(value) {
             attributes["feeder:fetchOgImages"] = value.toString()
+        }
+    var localBlockList: String
+        get() = attributes["feeder:localBlockList"] ?: ""
+        set(value) {
+            attributes["feeder:localBlockList"] = value
+        }
+    var localAllowList: String
+        get() = attributes["feeder:localAllowList"] ?: ""
+        set(value) {
+            attributes["feeder:localAllowList"] = value
         }
 }
 

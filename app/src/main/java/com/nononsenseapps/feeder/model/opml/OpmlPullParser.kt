@@ -48,6 +48,10 @@ private const val ATTR_OPEN_ARTICLES_WITH = "openArticlesWith"
 
 private const val ATTR_FETCH_OG_IMAGES = "fetchOgImages"
 
+private const val ATTR_LOCAL_BLOCK_LIST = "localBlockList"
+
+private const val ATTR_LOCAL_ALLOW_LIST = "localAllowList"
+
 private const val TAG_BLOCKED = "blocked"
 
 @Suppress("NAME_SHADOWING")
@@ -273,16 +277,16 @@ class OpmlPullParser(
                                 ?: feed.notify,
                         fullTextByDefault =
                             (
-                                parser
-                                    .getAttributeValue(
-                                        OPML_FEEDER_NAMESPACE,
-                                        ATTR_FULL_TEXT_BY_DEFAULT,
-                                    )?.toBoolean()
+                                    parser
+                                        .getAttributeValue(
+                                            OPML_FEEDER_NAMESPACE,
+                                            ATTR_FULL_TEXT_BY_DEFAULT,
+                                        )?.toBoolean()
                                     // Support Flym's value for this
-                                    ?: parser
-                                        .getAttributeValue(null, ATTR_FLYM_RETRIEVE_FULL_TEXT)
-                                        ?.toBoolean()
-                            ) ?: feed.fullTextByDefault,
+                                        ?: parser
+                                            .getAttributeValue(null, ATTR_FLYM_RETRIEVE_FULL_TEXT)
+                                            ?.toBoolean()
+                                    ) ?: feed.fullTextByDefault,
                         alternateId =
                             parser
                                 .getAttributeValue(OPML_FEEDER_NAMESPACE, ATTR_ALTERNATE_ID)
@@ -313,6 +317,28 @@ class OpmlPullParser(
                                         null
                                     }
                                 } ?: feed.imageUrl,
+                        // UPDATED: Per-feed block list strings converted from comma back to newlines cleanly
+                        localBlockList =
+                            parser
+                                .getAttributeValue(OPML_FEEDER_NAMESPACE, ATTR_LOCAL_BLOCK_LIST)
+                                ?.let { rawVal ->
+                                    unescape(rawVal)
+                                        .split(",")
+                                        .map { it.trim() }
+                                        .filter { it.isNotBlank() }
+                                        .joinToString("\n")
+                                } ?: feed.localBlockList,
+                        // UPDATED: Per-feed allow list strings converted from comma back to newlines cleanly
+                        localAllowList =
+                            parser
+                                .getAttributeValue(OPML_FEEDER_NAMESPACE, ATTR_LOCAL_ALLOW_LIST)
+                                ?.let { rawVal ->
+                                    unescape(rawVal)
+                                        .split(",")
+                                        .map { it.trim() }
+                                        .filter { it.isNotBlank() }
+                                        .joinToString("\n")
+                                } ?: feed.localAllowList,
                     )
                 }
 

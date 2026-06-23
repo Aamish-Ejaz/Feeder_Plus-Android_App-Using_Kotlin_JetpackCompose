@@ -556,6 +556,11 @@ interface FeedItemDao {
     @Query("SELECT id FROM feed_items")
     suspend fun getAllFeedItemIds(): List<Long>
 
+
+    // Used by SavedArticles import to check if an item with this link already exists
+    @Query("SELECT * FROM feed_items WHERE link IS :link LIMIT 1")
+    suspend fun loadFeedItemByLink(link: String): FeedItem?
+
     companion object {
         // These are backed by a database index
         const val FEED_ITEM_LIST_SORT_ORDER_DESC =

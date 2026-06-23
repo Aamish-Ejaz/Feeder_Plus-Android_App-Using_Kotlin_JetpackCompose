@@ -21,6 +21,11 @@ class SessionStore {
         }
     }
 
+    // SessionStore.kt mein yeh method add karein
+    fun setExpandedTags(tags: Set<String>) {
+        _expandedTags.update { tags }
+    }
+
     private val _expandedTags = MutableStateFlow(emptySet<String>())
     val expandedTags: StateFlow<Set<String>> = _expandedTags.asStateFlow()
 

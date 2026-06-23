@@ -77,6 +77,7 @@ fun FeedItemCard(
     onOpenFeedItemInBrowser: () -> Unit,
     onMarkAboveAsRead: () -> Unit,
     onMarkBelowAsRead: () -> Unit,
+    onMarkAsRead: () -> Unit,
     onShareItem: () -> Unit,
     onToggleBookmark: () -> Unit,
     dropDownMenuExpanded: Boolean,
@@ -164,6 +165,7 @@ fun FeedItemCard(
                     onOpenFeedItemInBrowser = onOpenFeedItemInBrowser,
                     onMarkAboveAsRead = onMarkAboveAsRead,
                     onMarkBelowAsRead = onMarkBelowAsRead,
+                    onMarkAsRead = onMarkAsRead,
                     onShareItem = onShareItem,
                     onToggleBookmark = onToggleBookmark,
                     dropDownMenuExpanded = dropDownMenuExpanded,
@@ -185,6 +187,7 @@ fun RowScope.FeedItemText(
     onOpenFeedItemInBrowser: () -> Unit,
     onMarkAboveAsRead: () -> Unit,
     onMarkBelowAsRead: () -> Unit,
+    onMarkAsRead: () -> Unit,
     onShareItem: () -> Unit,
     onToggleBookmark: () -> Unit,
     dropDownMenuExpanded: Boolean,
@@ -317,6 +320,7 @@ fun RowScope.FeedItemText(
                         )
                     },
                 )
+                /*
                 DropdownMenuItem(
                     onClick = {
                         onDismissDropdown()
@@ -336,6 +340,23 @@ fun RowScope.FeedItemText(
                     text = {
                         Text(
                             text = stringResource(id = R.string.mark_items_below_as_read),
+                        )
+                    },
+                )
+                */
+                DropdownMenuItem(
+                    onClick = {
+                        onDismissDropdown()
+                        onMarkAsRead()
+                    },
+                    text = {
+                        Text(
+                            text = stringResource(
+                                when (item.unread) {
+                                    true -> R.string.mark_as_read
+                                    false -> R.string.mark_as_unread
+                                }
+                            ),
                         )
                     },
                 )
@@ -439,6 +460,7 @@ private fun Preview() {
             onOpenFeedItemInBrowser = {},
             onMarkAboveAsRead = {},
             onMarkBelowAsRead = {},
+            onMarkAsRead = {},
             onShareItem = {},
             onToggleBookmark = {},
             dropDownMenuExpanded = false,
@@ -482,6 +504,7 @@ private fun PreviewWithImageUnread() {
                 onOpenFeedItemInBrowser = {},
                 onMarkAboveAsRead = {},
                 onMarkBelowAsRead = {},
+                onMarkAsRead = {},
                 onShareItem = {},
                 onToggleBookmark = {},
                 dropDownMenuExpanded = false,
@@ -526,6 +549,7 @@ private fun PreviewWithImageRead() {
                 onOpenFeedItemInBrowser = {},
                 onMarkAboveAsRead = {},
                 onMarkBelowAsRead = {},
+                onMarkAsRead = {},
                 onShareItem = {},
                 onToggleBookmark = {},
                 dropDownMenuExpanded = false,

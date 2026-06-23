@@ -324,10 +324,10 @@
   <string name="off">Off</string>
   <string name="search_verb">Search</string>
   <string name="cancel_search">Cancel search</string>
-    <string name="text">Text</string>
+  <string name="text">Text</string>
   <string name="font">Font</string>
   <string name="text_preview">Text preview</string>
-    <string name="system_default">System default</string>
+  <string name="system_default">System default</string>
   <string name="weight">Weight</string>
   <string name="italic">Italic</string>
   <string name="add_font">Add font…</string>
@@ -348,4 +348,10 @@
 
   <string name="widget_title">Feeder</string>
   <string name="widget_refreshing">Refreshing</string>
+  <!-- Per-feed filtering -->
+  <string name="per_feed_filtering">Per-Feed Filters</string>
+  <string name="local_white_list">Allow list</string>
+  <string name="local_block_list_desc">Hide items from this feed whose title contains any of these keywords</string>
+  <string name="local_white_list_desc">Only show items from this feed whose title contains any of these keywords</string>
+  <string name="import_saved_articles">Import saved articles</string>
 </resources>

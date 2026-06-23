@@ -45,6 +45,9 @@ class CreateFeedScreenViewModel(
     override var alternateId: Boolean by mutableSavedStateOf(state, false)
     override var summarizeOnOpen: Boolean by mutableSavedStateOf(state, false)
     override var fetchOgImages: Boolean by mutableSavedStateOf(state, false)
+    // Per-feed filtering — empty by default for new feeds
+    override var localBlockList: String by mutableSavedStateOf(state, "")
+    override var localAllowList: String by mutableSavedStateOf(state, "")
     override var allTags: List<String> by mutableStateOf(emptyList())
     override var defaultTitle: String by mutableStateOf(state["feedTitle"] ?: "")
     override var feedImage: String by mutableStateOf(state["feedImage"] ?: "")
@@ -65,7 +68,7 @@ class CreateFeedScreenViewModel(
                 PREF_VAL_OPEN_WITH_WEBVIEW,
                 PREF_VAL_OPEN_WITH_BROWSER,
                 PREF_VAL_OPEN_WITH_CUSTOM_TAB,
-                -> false
+                    -> false
 
                 else -> true
             }
@@ -96,6 +99,8 @@ class CreateFeedScreenViewModel(
                         whenModified = Instant.now(),
                         imageUrl = sloppyLinkToStrictURLOrNull(feedImage),
                         fetchOgImages = fetchOgImages,
+                        localBlockList = localBlockList,
+                        localAllowList = localAllowList,
                     ),
                 )
 

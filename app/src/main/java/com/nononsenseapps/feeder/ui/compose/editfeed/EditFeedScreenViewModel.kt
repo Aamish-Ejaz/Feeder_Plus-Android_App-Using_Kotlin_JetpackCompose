@@ -48,6 +48,8 @@ class EditFeedScreenViewModel(
     override var alternateId: Boolean by mutableSavedStateOf(state, false)
     override var summarizeOnOpen: Boolean by mutableSavedStateOf(state, false)
     override var fetchOgImages: Boolean by mutableSavedStateOf(state, false)
+    override var localBlockList: String by mutableSavedStateOf(state, "")
+    override var localAllowList: String by mutableSavedStateOf(state, "")
     override var allTags: List<String> by mutableStateOf(emptyList())
 
     override var feedImage: String by mutableStateOf("")
@@ -71,7 +73,7 @@ class EditFeedScreenViewModel(
                 PREF_VAL_OPEN_WITH_WEBVIEW,
                 PREF_VAL_OPEN_WITH_BROWSER,
                 PREF_VAL_OPEN_WITH_CUSTOM_TAB,
-                -> false
+                    -> false
 
                 else -> true
             }
@@ -116,6 +118,12 @@ class EditFeedScreenViewModel(
             if (!state.contains("fetchOgImages")) {
                 fetchOgImages = feed.fetchOgImages
             }
+            if (!state.contains("localBlockList")) {
+                localBlockList = feed.localBlockList
+            }
+            if (!state.contains("localAllowList")) {
+                localAllowList = feed.localAllowList
+            }
 
             repository.allTags
                 .collect { value ->
@@ -143,6 +151,8 @@ class EditFeedScreenViewModel(
                     alternateId = alternateId,
                     summarizeOnOpen = summarizeOnOpen,
                     fetchOgImages = fetchOgImages,
+                    localBlockList = localBlockList,
+                    localAllowList = localAllowList,
                 )
 
             // No point in doing anything unless they actually differ
@@ -153,6 +163,17 @@ class EditFeedScreenViewModel(
                     repository.saveFeed(
                         updatedFeed,
                     )
+                // Trigger blocklist update if per-feed filters changed
+                if (feed.localBlockList != localBlockList || feed.localAllowList != localAllowList) {
+                    // Agar blocklist empty hai toh empty string bhejein taake filter reset ho jaye aur feeds gayab na hon
+                    repository.updateLocalBlockList(savedId, localBlockList.trim())
+                    repository.updateLocalAllowList(savedId, localAllowList.trim())
+
+                    viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                        val blocklistDao: com.nononsenseapps.feeder.db.room.BlocklistDao by instance()
+//                        blocklistDao.setItemBlockStatus(java.time.Instant.now(), true)
+                    }
+                }
                 runOnceRssSync(
                     di = di,
                     feedId = savedId,

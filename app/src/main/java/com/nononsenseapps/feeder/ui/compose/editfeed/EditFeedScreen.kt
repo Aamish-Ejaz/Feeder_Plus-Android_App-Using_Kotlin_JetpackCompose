@@ -73,6 +73,7 @@ import com.nononsenseapps.feeder.ui.compose.components.OkCancelWithContent
 import com.nononsenseapps.feeder.ui.compose.feed.ExplainPermissionDialog
 import com.nononsenseapps.feeder.ui.compose.modifiers.interceptKey
 import com.nononsenseapps.feeder.ui.compose.settings.GroupTitle
+import com.nononsenseapps.feeder.ui.compose.settings.ListDialogSetting
 import com.nononsenseapps.feeder.ui.compose.settings.RadioButtonSetting
 import com.nononsenseapps.feeder.ui.compose.settings.SwitchSetting
 import com.nononsenseapps.feeder.ui.compose.theme.LocalDimens
@@ -529,6 +530,77 @@ fun ColumnScope.RightContent(
         icon = null,
     )
     HorizontalDivider(modifier = Modifier.fillMaxWidth())
+
+    // Per-feed filtering section
+    GroupTitle(
+        startingSpace = false,
+        height = 48.dp,
+    ) {
+        Text(stringResource(id = R.string.per_feed_filtering))
+    }
+
+    val blockListValue = remember(viewState.localBlockList) {
+        ImmutableHolder(viewState.localBlockList.split("\n").filter { it.isNotBlank() })
+    }
+
+    ListDialogSetting(
+        title = stringResource(id = R.string.block_list),
+        dialogTitle = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = stringResource(id = R.string.block_list),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                Text(
+                    text = "Enter words to hide items from this feed (e.g., cricket, politics). Use * for wildcards.",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        },
+        currentValue = blockListValue,
+        onAddItem = { newItem ->
+            val current = viewState.localBlockList
+            viewState.localBlockList = if (current.isBlank()) newItem else "$current\n$newItem"
+        },
+        onRemoveItem = { itemToRemove ->
+            viewState.localBlockList = blockListValue.item
+                .filter { it != itemToRemove }
+                .joinToString("\n")
+        },
+
+    )
+
+    val allowListValue = remember(viewState.localAllowList) {
+        ImmutableHolder(viewState.localAllowList.split("\n").filter { it.isNotBlank() })
+    }
+
+    ListDialogSetting(
+        title = stringResource(id = R.string.local_white_list),
+        dialogTitle = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = stringResource(id = R.string.local_white_list),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                Text(
+                    text = "Only show items containing these words.",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        },
+        currentValue = allowListValue,
+        onAddItem = { newItem ->
+            val current = viewState.localAllowList
+            viewState.localAllowList = if (current.isBlank()) newItem else "$current\n$newItem"
+        },
+        onRemoveItem = { itemToRemove ->
+            viewState.localAllowList = allowListValue.item
+                .filter { it != itemToRemove }
+                .joinToString("\n")
+        },
+    )
+
+    HorizontalDivider(modifier = Modifier.fillMaxWidth())
     GroupTitle(
         startingSpace = false,
         height = 48.dp,
@@ -585,6 +657,8 @@ interface EditFeedScreenState {
     var alternateId: Boolean
     var summarizeOnOpen: Boolean
     var fetchOgImages: Boolean
+    var localBlockList: String
+    var localAllowList: String
     val isOkToSave: Boolean
     val isNotValidUrl: Boolean
     val isOpenItemWithBrowser: Boolean
@@ -619,6 +693,8 @@ private class ScreenState(
     override var alternateId: Boolean by mutableStateOf(false)
     override var summarizeOnOpen: Boolean by mutableStateOf(false)
     override var fetchOgImages: Boolean by mutableStateOf(false)
+    override var localBlockList: String by mutableStateOf("")
+    override var localAllowList: String by mutableStateOf("")
 }
 
 @Preview("Edit Feed Phone")

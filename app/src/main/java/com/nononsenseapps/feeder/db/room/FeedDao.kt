@@ -279,4 +279,17 @@ interface FeedDao {
         host: String,
         retryAfter: Instant,
     )
+
+    // Per-feed filtering queries
+    @Query("UPDATE feeds SET local_block_list = :blockList WHERE id IS :feedId")
+    suspend fun updateLocalBlockList(
+        feedId: Long,
+        blockList: String,
+    )
+
+    @Query("UPDATE feeds SET local_allow_list = :allowList WHERE id IS :feedId")
+    suspend fun updateLocalAllowList(
+        feedId: Long,
+        allowList: String,
+    )
 }

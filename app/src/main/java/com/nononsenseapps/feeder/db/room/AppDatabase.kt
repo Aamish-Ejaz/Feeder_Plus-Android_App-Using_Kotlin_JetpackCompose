@@ -54,7 +54,7 @@ private const val LOG_TAG = "FEEDER_APPDB"
     views = [
         FeedsWithItemsForNavDrawer::class,
     ],
-    version = 39,
+    version = 40,
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -138,6 +138,7 @@ fun getAllMigrations(di: DI) =
         MigrationFrom36To37(di),
         MigrationFrom37To38(di),
         MIGRATION_38_39,
+        MIGRATION_39_40,
     )
 
 /*
@@ -214,6 +215,23 @@ object MIGRATION_38_39 : Migration(38, 39) {
         )
     }
 }
+
+@Suppress("ClassName")
+object MIGRATION_39_40 : Migration(39, 40) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL(
+            """
+            ALTER TABLE feeds ADD COLUMN local_block_list TEXT NOT NULL DEFAULT ''
+            """.trimIndent(),
+        )
+        database.execSQL(
+            """
+            ALTER TABLE feeds ADD COLUMN local_allow_list TEXT NOT NULL DEFAULT ''
+            """.trimIndent(),
+        )
+    }
+}
+
 
 class MigrationFrom35To36(
     override val di: DI,

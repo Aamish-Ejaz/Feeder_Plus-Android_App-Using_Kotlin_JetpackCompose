@@ -82,6 +82,7 @@ fun SwipeableFeedItemPreview(
     showReadingTime: Boolean,
     onMarkAboveAsRead: () -> Unit,
     onMarkBelowAsRead: () -> Unit,
+    onMarkAsRead: () -> Unit,
     onToggleBookmark: () -> Unit,
     onShareItem: () -> Unit,
     onItemClick: () -> Unit,
@@ -208,6 +209,7 @@ fun SwipeableFeedItemPreview(
                                 onToggleBookmark()
                                 true
                             },
+                            /*
                             CustomAccessibilityAction(markAboveAsReadLabel) {
                                 onMarkAboveAsRead()
                                 true
@@ -216,6 +218,7 @@ fun SwipeableFeedItemPreview(
                                 onMarkBelowAsRead()
                                 true
                             },
+                            */
                             CustomAccessibilityAction(shareLabel) {
                                 onShareItem()
                                 true
@@ -284,6 +287,7 @@ fun SwipeableFeedItemPreview(
                     onOpenFeedItemInBrowser = onOpenFeedItemInBrowser,
                     onMarkAboveAsRead = onMarkAboveAsRead,
                     onMarkBelowAsRead = onMarkBelowAsRead,
+                    onMarkAsRead = onMarkAsRead,
                     onShareItem = onShareItem,
                     onToggleBookmark = onToggleBookmark,
                     dropDownMenuExpanded = dropDownMenuExpanded,
@@ -332,6 +336,7 @@ fun SwipeableFeedItemPreview(
                             FeedItemEvent.OpenInBrowser -> onOpenFeedItemInBrowser()
                             FeedItemEvent.MarkAboveAsRead -> onMarkAboveAsRead()
                             FeedItemEvent.MarkBelowAsRead -> onMarkBelowAsRead()
+                            FeedItemEvent.ToggleReadStatus -> onMarkAsRead()
                             FeedItemEvent.ShareItem -> onShareItem()
                             FeedItemEvent.ToggleBookmarked -> onToggleBookmark()
                         }
@@ -348,6 +353,7 @@ fun SwipeableFeedItemPreview(
                     onOpenFeedItemInBrowser = onOpenFeedItemInBrowser,
                     onMarkAboveAsRead = onMarkAboveAsRead,
                     onMarkBelowAsRead = onMarkBelowAsRead,
+                    onMarkAsRead = onMarkAsRead,
                     onShareItem = onShareItem,
                     onToggleBookmark = onToggleBookmark,
                     dropDownMenuExpanded = dropDownMenuExpanded,
@@ -380,6 +386,7 @@ fun SwipeableFeedItemPreview(
                     onOpenFeedItemInBrowser = onOpenFeedItemInBrowser,
                     onMarkAboveAsRead = onMarkAboveAsRead,
                     onMarkBelowAsRead = onMarkBelowAsRead,
+                    onMarkAsRead = onMarkAsRead,
                     onShareItem = onShareItem,
                     onToggleBookmark = onToggleBookmark,
                     dropDownMenuExpanded = dropDownMenuExpanded,
